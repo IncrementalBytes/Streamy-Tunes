@@ -30,8 +30,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.Utils;
 import net.whollynugatory.streamytunes.android.db.models.AlbumDetails;
+import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,7 +40,7 @@ import java.util.Locale;
 
 public class AlbumsFragment extends Fragment {
 
-  private static final String TAG = Utils.BASE_TAG + "AlbumsFragment";
+  private static final String TAG = BaseActivity.BASE_TAG + AlbumsFragment.class.getSimpleName();
 
   public interface OnAlbumListener {
 
@@ -56,7 +56,7 @@ public class AlbumsFragment extends Fragment {
 
     Log.d(TAG, "++newInstance(ArrayList<AlbumDetails>)");
     Bundle arguments = new Bundle();
-    arguments.putParcelableArrayList(Utils.ARG_ALBUM_DETAILS_COLLECTION, albumDetailsList);
+    arguments.putParcelableArrayList(BaseActivity.ARG_ALBUM_DETAILS_COLLECTION, albumDetailsList);
     AlbumsFragment fragment = new AlbumsFragment();
     fragment.setArguments(arguments);
     return fragment;
@@ -88,10 +88,9 @@ public class AlbumsFragment extends Fragment {
 
     Bundle arguments = getArguments();
     if (arguments != null) {
-      mAlbumDetailsList = arguments.getParcelableArrayList(Utils.ARG_ALBUM_DETAILS_COLLECTION);
+      mAlbumDetailsList = arguments.getParcelableArrayList(BaseActivity.ARG_ALBUM_DETAILS_COLLECTION);
     } else {
-      String message = "Arguments were null.";
-      Log.e(TAG, message);
+      Log.e(TAG, "Arguments were null.");
     }
   }
 
@@ -173,6 +172,10 @@ public class AlbumsFragment extends Fragment {
         mAlbumDetails = albumDetails;
 
         if (mAlbumDetails != null) {
+          if (mAlbumDetails.Art != null) {
+            mAlbumImage.setImageBitmap(mAlbumDetails.Art);
+          }
+
           mAlbumTextView.setText(mAlbumDetails.Name);
           mSongsTextView.setText(String.format(getString(R.string.format_songs), mAlbumDetails.Songs.values().size()));
           mArtistTextView.setText(mAlbumDetails.ArtistName);

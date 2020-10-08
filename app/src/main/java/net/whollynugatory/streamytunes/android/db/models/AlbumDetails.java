@@ -15,6 +15,7 @@
  */
 package net.whollynugatory.streamytunes.android.db.models;
 
+import android.graphics.Bitmap;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -23,6 +24,7 @@ import java.util.HashMap;
 public class AlbumDetails implements Parcelable {
 
   public long Id;
+  public Bitmap Art;
   public String ArtistName;
   public String Name;
   public HashMap<Long, SongDetails> Songs;
@@ -30,12 +32,14 @@ public class AlbumDetails implements Parcelable {
   public AlbumDetails() {
 
     Id = 0;
-    Name = "";
+    Art = null;
     ArtistName = "";
+    Name = "";
     Songs = new HashMap<>();
   }
 
   protected AlbumDetails(Parcel in) {
+
     Id = in.readLong();
     ArtistName = in.readString();
     Name = in.readString();

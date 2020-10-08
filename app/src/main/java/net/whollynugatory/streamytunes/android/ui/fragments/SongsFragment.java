@@ -30,9 +30,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.Utils;
 import net.whollynugatory.streamytunes.android.db.models.AlbumDetails;
 import net.whollynugatory.streamytunes.android.db.models.SongDetails;
+import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,7 +42,7 @@ import java.util.Map;
 
 public class SongsFragment extends Fragment {
 
-  private static final String TAG = Utils.BASE_TAG + "SongsFragment";
+  private static final String TAG = BaseActivity.BASE_TAG + SongsFragment.class.getSimpleName();
 
   public interface OnSongListener {
 
@@ -66,7 +66,7 @@ public class SongsFragment extends Fragment {
 
     Log.d(TAG, "++newInstance(ArrayList<AlbumDetails>)");
     Bundle arguments = new Bundle();
-    arguments.putParcelableArrayList(Utils.ARG_ALBUM_DETAILS_COLLECTION, albumDetailsList);
+    arguments.putParcelableArrayList(BaseActivity.ARG_ALBUM_DETAILS_COLLECTION, albumDetailsList);
     SongsFragment fragment = new SongsFragment();
     fragment.setArguments(arguments);
     return fragment;
@@ -98,16 +98,19 @@ public class SongsFragment extends Fragment {
 
     Bundle arguments = getArguments();
     if (arguments != null) {
-      List<AlbumDetails> albumDetails = arguments.getParcelableArrayList(Utils.ARG_ALBUM_DETAILS_COLLECTION);
+      List<AlbumDetails> albumDetails = arguments.getParcelableArrayList(BaseActivity.ARG_ALBUM_DETAILS_COLLECTION);
       mSongDetailsList = new ArrayList<>();
-      for (AlbumDetails album : albumDetails) {
-        for (Map.Entry<Long, SongDetails> song : album.Songs.entrySet()) {
-          mSongDetailsList.add(song.getValue());
+      if (albumDetails != null) {
+        for (AlbumDetails album : albumDetails) {
+          for (Map.Entry<Long, SongDetails> song : album.Songs.entrySet()) {
+            mSongDetailsList.add(song.getValue());
+          }
         }
+      } else {
+        Log.w(TAG, "No album details in collection.");
       }
     } else {
-      String message = "Arguments were null.";
-      Log.e(TAG, message);
+      Log.e(TAG, "Arguments were null.");
     }
   }
 
@@ -187,8 +190,11 @@ public class SongsFragment extends Fragment {
       void bind(SongDetails songDetails) {
 
         mSongDetails = songDetails;
-
         if (mSongDetails != null) {
+          if (mSongDetails.AlbumArt != null) {
+            mAlbumImage.setImageBitmap(mSongDetails.AlbumArt);
+          }
+
           mAlbumTextView.setText(mSongDetails.AlbumName);
           mTitleTextView.setText(mSongDetails.Title);
           mArtistTextView.setText(mSongDetails.ArtistName);

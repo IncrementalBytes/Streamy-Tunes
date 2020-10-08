@@ -15,6 +15,7 @@
  */
 package net.whollynugatory.streamytunes.android.db.models;
 
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -22,10 +23,11 @@ import android.os.Parcelable;
 public class SongDetails implements Parcelable {
 
   public long Id;
-  public long ArtistId;
-  public String ArtistName;
+  public Bitmap AlbumArt;
   public long AlbumId;
   public String AlbumName;
+  public long ArtistId;
+  public String ArtistName;
   public String DisplayName;
   public Uri LocalSource;
   public String Title;
@@ -35,6 +37,7 @@ public class SongDetails implements Parcelable {
   public SongDetails() {
 
     Id = 0;
+    AlbumArt = null;
     AlbumId = 0;
     AlbumName = "";
     ArtistId = 0;
@@ -47,11 +50,12 @@ public class SongDetails implements Parcelable {
   }
 
   protected SongDetails(Parcel in) {
+
     Id = in.readLong();
-    ArtistId = in.readLong();
-    ArtistName = in.readString();
     AlbumId = in.readLong();
     AlbumName = in.readString();
+    ArtistId = in.readLong();
+    ArtistName = in.readString();
     DisplayName = in.readString();
     LocalSource = in.readParcelable(Uri.class.getClassLoader());
     Title = in.readString();
@@ -81,11 +85,12 @@ public class SongDetails implements Parcelable {
 
   @Override
   public void writeToParcel(Parcel parcel, int i) {
+
     parcel.writeLong(Id);
-    parcel.writeLong(ArtistId);
-    parcel.writeString(ArtistName);
     parcel.writeLong(AlbumId);
     parcel.writeString(AlbumName);
+    parcel.writeLong(ArtistId);
+    parcel.writeString(ArtistName);
     parcel.writeString(DisplayName);
     parcel.writeParcelable(LocalSource, i);
     parcel.writeString(Title);
@@ -100,6 +105,7 @@ public class SongDetails implements Parcelable {
 
     AlbumDetails albumDetails = new AlbumDetails();
     albumDetails.Id = AlbumId;
+    albumDetails.Art = AlbumArt;
     albumDetails.ArtistName = ArtistName;
     albumDetails.Name = AlbumName;
     albumDetails.Songs.put(Id, this);

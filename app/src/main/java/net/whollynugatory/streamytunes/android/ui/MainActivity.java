@@ -20,7 +20,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -30,10 +29,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
+import net.whollynugatory.streamytunes.android.PreferenceUtils;
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.Utils;
 import net.whollynugatory.streamytunes.android.db.models.AlbumDetails;
 import net.whollynugatory.streamytunes.android.db.models.ArtistDetails;
 import net.whollynugatory.streamytunes.android.db.models.SongDetails;
@@ -47,14 +47,16 @@ import net.whollynugatory.streamytunes.android.ui.fragments.UserSettingsFragment
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class MainActivity extends AppCompatActivity implements
+public class MainActivity extends BaseActivity implements
   AlbumsFragment.OnAlbumListener,
   ArtistsFragment.OnArtistListener,
   PlayerFragment.OnPlayerListener,
   SongsFragment.OnSongListener,
   SummaryFragment.OnSummaryListener {
 
-  private static final String TAG = Utils.BASE_TAG + MainActivity.class.getSimpleName();
+  private static final String TAG = BaseActivity.BASE_TAG + MainActivity.class.getSimpleName();
+
+  private BottomNavigationView mNavigationView;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -63,9 +65,32 @@ public class MainActivity extends AppCompatActivity implements
     Log.d(TAG, "++onCreate(Bundle)");
     setContentView(R.layout.activity_main);
     Toolbar mainToolbar = findViewById(R.id.main_toolbar);
+    mNavigationView = findViewById(R.id.main_nav_bottom);
+
     setSupportActionBar(mainToolbar);
 
-    checkForPermission(Manifest.permission.READ_EXTERNAL_STORAGE, Utils.REQUEST_STORAGE_PERMISSIONS);
+    mNavigationView.setOnNavigationItemSelectedListener(menuItem -> {
+
+      Log.d(TAG, "++onNavigationItemSelectedListener(MenuItem)");
+      switch (menuItem.getItemId()) {
+        case R.id.navigation_music:
+          PreferenceUtils.setIsMusic(this);
+          replaceFragment(SummaryFragment.newInstance());
+          return true;
+        case R.id.navigation_audiobook:
+          PreferenceUtils.setIsAudiobook(this);
+          replaceFragment(SummaryFragment.newInstance());
+          return true;
+        case R.id.navigation_podcast:
+          PreferenceUtils.setIsPodcast(this);
+          replaceFragment(SummaryFragment.newInstance());
+          return true;
+      }
+
+      return false;
+    });
+
+    checkForPermission(Manifest.permission.READ_EXTERNAL_STORAGE, BaseActivity.REQUEST_STORAGE_PERMISSIONS);
   }
 
   @Override
@@ -100,8 +125,8 @@ public class MainActivity extends AppCompatActivity implements
   public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
     Log.d(TAG, "++onRequestPermissionsResult(int, String[], int[])");
-    if (requestCode == Utils.REQUEST_STORAGE_PERMISSIONS) {
-      checkForPermission(Manifest.permission.READ_EXTERNAL_STORAGE, Utils.REQUEST_STORAGE_PERMISSIONS);
+    if (requestCode == BaseActivity.REQUEST_STORAGE_PERMISSIONS) {
+      checkForPermission(Manifest.permission.READ_EXTERNAL_STORAGE, BaseActivity.REQUEST_STORAGE_PERMISSIONS);
     }
   }
 
@@ -158,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements
     if (ContextCompat.checkSelfPermission(this, permissionName) != PackageManager.PERMISSION_GRANTED) {
       if (ActivityCompat.shouldShowRequestPermissionRationale(this, permissionName)) {
         String requestMessage = getString(R.string.permission_default);
-        if (permissionId == Utils.REQUEST_STORAGE_PERMISSIONS) {
+        if (permissionId == BaseActivity.REQUEST_STORAGE_PERMISSIONS) {
           requestMessage = getString(R.string.permission_storage);
         }
 
@@ -178,7 +203,7 @@ public class MainActivity extends AppCompatActivity implements
       }
     } else {
       Log.d(TAG, "Permission granted: " + permissionName);
-      if (permissionId == Utils.REQUEST_STORAGE_PERMISSIONS) {
+      if (permissionId == BaseActivity.REQUEST_STORAGE_PERMISSIONS) {
         replaceFragment(SummaryFragment.newInstance());
       }
     }

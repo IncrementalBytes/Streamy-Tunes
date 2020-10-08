@@ -30,8 +30,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.Utils;
 import net.whollynugatory.streamytunes.android.db.models.ArtistDetails;
+import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,7 +40,7 @@ import java.util.Locale;
 
 public class ArtistsFragment extends Fragment {
 
-  private static final String TAG = Utils.BASE_TAG + "ArtistsFragment";
+  private static final String TAG = BaseActivity.BASE_TAG + ArtistsFragment.class.getSimpleName();
 
   public interface OnArtistListener {
 
@@ -56,7 +56,7 @@ public class ArtistsFragment extends Fragment {
 
     Log.d(TAG, "++newInstance(ArrayList<ArtistDetails>)");
     Bundle arguments = new Bundle();
-    arguments.putParcelableArrayList(Utils.ARG_ARTIST_DETAILS_COLLECTION, artistDetailsList);
+    arguments.putParcelableArrayList(BaseActivity.ARG_ARTIST_DETAILS_COLLECTION, artistDetailsList);
     ArtistsFragment fragment = new ArtistsFragment();
     fragment.setArguments(arguments);
     return fragment;
@@ -88,10 +88,9 @@ public class ArtistsFragment extends Fragment {
 
     Bundle arguments = getArguments();
     if (arguments != null) {
-      mArtistDetailsList = arguments.getParcelableArrayList(Utils.ARG_ARTIST_DETAILS_COLLECTION);
+      mArtistDetailsList = arguments.getParcelableArrayList(BaseActivity.ARG_ARTIST_DETAILS_COLLECTION);
     } else {
-      String message = "Arguments were null.";
-      Log.e(TAG, message);
+      Log.e(TAG, "Arguments were null.");
     }
   }
 

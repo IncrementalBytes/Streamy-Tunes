@@ -21,6 +21,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,26 +33,24 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import net.whollynugatory.streamytunes.android.PreferenceUtils;
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.Utils;
 import net.whollynugatory.streamytunes.android.db.models.AlbumDetails;
 import net.whollynugatory.streamytunes.android.db.models.ArtistDetails;
 import net.whollynugatory.streamytunes.android.db.models.SongDetails;
+import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 
 public class SummaryFragment extends Fragment {
 
-  private static final String TAG = Utils.BASE_TAG + "SummaryFragment";
+  private static final String TAG = BaseActivity.BASE_TAG + SummaryFragment.class.getSimpleName();
 
   private HashMap<Long, AlbumDetails> mAlbumMap = new HashMap<>();
   private HashMap<Long, ArtistDetails> mArtistMap = new HashMap<>();
-
-  private static String sSelection = MediaStore.Audio.Media.IS_MUSIC + " == ?";
-  private static String[] sSelectionArgs = new String[]{"1"};
-  private static String sSortOrder = MediaStore.Audio.Media.YEAR + " DESC";
 
   private TextView mAlbumValueTextView;
   private TextView mArtistValueTextView;
@@ -115,9 +114,9 @@ public class SummaryFragment extends Fragment {
     mAlbumValueTextView = view.findViewById(R.id.summary_text_albums_value);
     mArtistValueTextView = view.findViewById(R.id.summary_text_artists_value);
     FloatingActionButton fab = view.findViewById(R.id.summary_fab_sync);
-    fab.setOnClickListener(view1 -> getSongList());
+    fab.setOnClickListener(view1 -> getMediaList());
 
-    getSongList();
+    getMediaList();
 
     return view;
   }
@@ -144,9 +143,18 @@ public class SummaryFragment extends Fragment {
     Log.d(TAG, "++onViewCreated(View, Bundle)");
   }
 
-  private void getSongList() {
+  private void getMediaList() {
 
     Log.d(TAG, "++getSongList()");
+    String selection = MediaStore.Audio.Media.IS_MUSIC + " == ?";
+    if (PreferenceUtils.getIsAudiobook(getContext())) {
+      selection = MediaStore.Audio.Media.IS_AUDIOBOOK + " == ?";
+    } else if (PreferenceUtils.getIsPodcast(getContext())) {
+      selection = MediaStore.Audio.Media.IS_PODCAST + " == ?";
+    }
+
+    String[] selectionArgs = new String[] {"1"};
+    String sortOrder = MediaStore.Audio.Media.YEAR + " DESC";
     String[] projection = new String[]{
       MediaStore.Audio.Media._ID,
       MediaStore.Audio.Media.ALBUM,
@@ -159,12 +167,13 @@ public class SummaryFragment extends Fragment {
       MediaStore.Audio.Media.YEAR
     };
 
+    // TODO: add support for internal/external querying
     try (Cursor cursor = getContext().getContentResolver().query(
       MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
       projection,
-      sSelection,
-      sSelectionArgs,
-      sSortOrder
+      selection,
+      selectionArgs,
+      sortOrder
     )) {
 
       int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID);
@@ -178,39 +187,47 @@ public class SummaryFragment extends Fragment {
       int yearColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR);
 
       while (cursor.moveToNext()) {
-        SongDetails songDetails = new SongDetails();
-        songDetails.Id = cursor.getLong(idColumn);
-        songDetails.AlbumName = cursor.getString(albumColumn);
-        songDetails.AlbumId = cursor.getLong(albumIdColumn);
-        songDetails.ArtistName = cursor.getString(artistColumn);
-        songDetails.ArtistId = cursor.getLong(artistIdColumn);
-        songDetails.DisplayName = cursor.getString(displayNameColumn);
-        songDetails.LocalSource = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "" + songDetails.Id);
-        songDetails.Title = cursor.getString(titleColumn);
-        songDetails.Track = cursor.getInt(trackColumn);
-        songDetails.Year = cursor.getInt(yearColumn);
+        try {
+          SongDetails songDetails = new SongDetails();
+          songDetails.Id = cursor.getLong(idColumn);
+          songDetails.AlbumName = cursor.getString(albumColumn);
+          songDetails.AlbumId = cursor.getLong(albumIdColumn);
+          songDetails.ArtistName = cursor.getString(artistColumn);
+          songDetails.ArtistId = cursor.getLong(artistIdColumn);
+          songDetails.DisplayName = cursor.getString(displayNameColumn);
+          songDetails.LocalSource = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "" + songDetails.Id);
+          songDetails.Title = cursor.getString(titleColumn);
+          songDetails.Track = cursor.getInt(trackColumn);
+          songDetails.Year = cursor.getInt(yearColumn);
 
-        AlbumDetails albumDetails = mAlbumMap.get(songDetails.AlbumId);
-        if (albumDetails != null) { // album found, check for song
-          if (!albumDetails.Songs.containsKey(songDetails.Id)) { // song not found
-            mAlbumMap.get(songDetails.AlbumId).Songs.put(songDetails.Id, songDetails);
-          }
-        } else { // album not found
-          mAlbumMap.put(songDetails.AlbumId, songDetails.toAlbumDetails());
-        }
-
-        ArtistDetails artistDetails = mArtistMap.get(songDetails.ArtistId);
-        if (artistDetails != null) { // artist found, check for album
-          AlbumDetails album = artistDetails.Albums.get(songDetails.AlbumId);
-          if (album != null) { // album found, check for song
-            if (!album.Songs.containsKey(songDetails.Id)) {
-              mArtistMap.get(songDetails.ArtistId).Albums.get(songDetails.AlbumId).Songs.put(songDetails.Id, songDetails);
+          songDetails.AlbumArt = getContext().getContentResolver().loadThumbnail(
+            songDetails.LocalSource,
+            new Size(640, 480),
+            null);
+          AlbumDetails albumDetails = mAlbumMap.get(songDetails.AlbumId);
+          if (albumDetails != null) { // album found, check for song
+            if (!albumDetails.Songs.containsKey(songDetails.Id)) { // song not found
+              mAlbumMap.get(songDetails.AlbumId).Songs.put(songDetails.Id, songDetails);
             }
           } else { // album not found
-            mArtistMap.get(songDetails.ArtistId).Albums.put(songDetails.AlbumId, songDetails.toAlbumDetails());
+            mAlbumMap.put(songDetails.AlbumId, songDetails.toAlbumDetails());
           }
-        } else { // artist not found
-          mArtistMap.put(songDetails.ArtistId, songDetails.toArtistDetails());
+
+          ArtistDetails artistDetails = mArtistMap.get(songDetails.ArtistId);
+          if (artistDetails != null) { // artist found, check for album
+            AlbumDetails album = artistDetails.Albums.get(songDetails.AlbumId);
+            if (album != null) { // album found, check for song
+              if (!album.Songs.containsKey(songDetails.Id)) {
+                mArtistMap.get(songDetails.ArtistId).Albums.get(songDetails.AlbumId).Songs.put(songDetails.Id, songDetails);
+              }
+            } else { // album not found
+              mArtistMap.get(songDetails.ArtistId).Albums.put(songDetails.AlbumId, songDetails.toAlbumDetails());
+            }
+          } else { // artist not found
+            mArtistMap.put(songDetails.ArtistId, songDetails.toArtistDetails());
+          }
+        } catch (NullPointerException | IOException e) {
+          Log.e(TAG, "Failed to create song details object.", e);
         }
       }
 

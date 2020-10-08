@@ -33,8 +33,8 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.ui.PlayerView;
 
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.Utils;
 import net.whollynugatory.streamytunes.android.db.models.SongDetails;
+import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +42,7 @@ import java.util.Locale;
 
 public class PlayerFragment extends Fragment {
 
-  private static final String TAG = Utils.BASE_TAG + "PlayerFragment";
+  private static final String TAG = BaseActivity.BASE_TAG + PlayerFragment.class.getSimpleName();
 
   private PlaybackStateListener mPlaybackStateListener;
 
@@ -73,7 +73,7 @@ public class PlayerFragment extends Fragment {
 
     Log.d(TAG, "++newInstance(Collection<SongDetails>)");
     Bundle arguments = new Bundle();
-    arguments.putParcelableArrayList(Utils.ARG_SONG_DETAILS_LIST, songDetailsList);
+    arguments.putParcelableArrayList(BaseActivity.ARG_SONG_DETAILS_LIST, songDetailsList);
     PlayerFragment fragment = new PlayerFragment();
     fragment.setArguments(arguments);
     return fragment;
@@ -93,10 +93,9 @@ public class PlayerFragment extends Fragment {
 
     Bundle arguments = getArguments();
     if (arguments != null) {
-      mSongDetailsList = arguments.getParcelableArrayList(Utils.ARG_SONG_DETAILS_LIST);
+      mSongDetailsList = arguments.getParcelableArrayList(BaseActivity.ARG_SONG_DETAILS_LIST);
     } else {
-      String message = "Arguments were null.";
-      Log.e(TAG, message);
+      Log.e(TAG, "Arguments were null.");
     }
   }
 
