@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-  <item android:id="@+id/navigation_music" android:icon="@drawable/ic_song_dark" android:title="@string/menu_music"/>
-  <item android:id="@+id/navigation_audiobook" android:icon="@drawable/ic_audiobook_dark" android:title="@string/menu_audiobook"/>
-  <item android:id="@+id/navigation_podcast" android:icon="@drawable/ic_podcast_dark" android:title="@string/menu_podcast"/>
+  <item android:id="@+id/navigation_music" android:icon="@drawable/ic_song_dark" android:title="@string/music"/>
+  <item android:id="@+id/navigation_audiobook" android:icon="@drawable/ic_audiobook_dark" android:title="@string/audiobooks"/>
+  <item android:id="@+id/navigation_podcast" android:icon="@drawable/ic_podcast_dark" android:title="@string/podcasts"/>
 </menu>

@@ -6,7 +6,7 @@
   android:layout_height="match_parent">
 
   <androidx.cardview.widget.CardView
-    android:id="@+id/summary_card_artists"
+    android:id="@+id/summary_card_first"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="@dimen/default_view_margin"
@@ -22,18 +22,18 @@
       android:layout_height="wrap_content">
 
       <TextView
-        android:id="@+id/summary_text_artists"
+        android:id="@+id/summary_text_first"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/default_view_margin"
         android:gravity="center"
-        android:text="@string/artists"
+        android:text="@string/placeholder"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
       <TextView
-        android:id="@+id/summary_text_artists_value"
+        android:id="@+id/summary_text_first_value"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/default_view_margin"
@@ -43,13 +43,13 @@
         android:gravity="center"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/summary_text_artists"
+        app:layout_constraintTop_toBottomOf="@id/summary_text_first"
         app:layout_constraintBottom_toBottomOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
   </androidx.cardview.widget.CardView>
 
   <androidx.cardview.widget.CardView
-    android:id="@+id/summary_card_albums"
+    android:id="@+id/summary_card_second"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="@dimen/default_view_margin"
@@ -57,7 +57,7 @@
     android:focusable="true"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@id/summary_card_artists"
+    app:layout_constraintTop_toBottomOf="@id/summary_card_first"
     card_view:cardCornerRadius="8dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -65,18 +65,18 @@
       android:layout_height="wrap_content">
 
       <TextView
-        android:id="@+id/summary_text_albums"
+        android:id="@+id/summary_text_second"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/default_view_margin"
         android:gravity="center"
-        android:text="@string/albums"
+        android:text="@string/placeholder"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
       <TextView
-        android:id="@+id/summary_text_albums_value"
+        android:id="@+id/summary_text_second_value"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/default_view_margin"
@@ -86,13 +86,13 @@
         android:gravity="center"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/summary_text_albums"
+        app:layout_constraintTop_toBottomOf="@id/summary_text_second"
         app:layout_constraintBottom_toBottomOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
   </androidx.cardview.widget.CardView>
 
   <androidx.cardview.widget.CardView
-    android:id="@+id/summary_card_playlists"
+    android:id="@+id/summary_card_third"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="@dimen/default_view_margin"
@@ -100,7 +100,7 @@
     android:focusable="false"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@id/summary_card_albums"
+    app:layout_constraintTop_toBottomOf="@id/summary_card_second"
     card_view:cardCornerRadius="8dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -108,18 +108,18 @@
       android:layout_height="wrap_content">
 
       <TextView
-        android:id="@+id/summary_text_playlists"
+        android:id="@+id/summary_text_third"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/default_view_margin"
         android:gravity="center"
-        android:text="@string/playlists"
+        android:text="@string/placeholder"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
       <TextView
-        android:id="@+id/summary_text_playlists_value"
+        android:id="@+id/summary_text_third_value"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/default_view_margin"
@@ -129,19 +129,9 @@
         android:gravity="center"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/summary_text_playlists"
+        app:layout_constraintTop_toBottomOf="@id/summary_text_third"
         app:layout_constraintBottom_toBottomOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
   </androidx.cardview.widget.CardView>
-
-  <com.google.android.material.floatingactionbutton.FloatingActionButton
-    android:id="@+id/summary_fab_sync"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_margin="@dimen/default_view_margin"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintBottom_toBottomOf="parent"
-    android:elevation="2dp"
-    android:src="@drawable/ic_index_dark"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

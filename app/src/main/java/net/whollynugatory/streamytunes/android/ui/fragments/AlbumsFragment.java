@@ -177,7 +177,7 @@ public class AlbumsFragment extends Fragment {
           }
 
           mAlbumTextView.setText(mAlbumDetails.Name);
-          mSongsTextView.setText(String.format(getString(R.string.format_songs), mAlbumDetails.Songs.values().size()));
+          mSongsTextView.setText(String.format(getString(R.string.format_songs), mAlbumDetails.MediaMap.values().size()));
           mArtistTextView.setText(mAlbumDetails.ArtistName);
         }
       }

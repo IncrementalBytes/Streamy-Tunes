@@ -8,6 +8,11 @@
     android:icon="@drawable/ic_home_dark"
     app:showAsAction="ifRoom"/>
   <item
+    android:id="@+id/action_main_sync"
+    android:title="@string/sync"
+    android:icon="@drawable/ic_sync_dark"
+    app:showAsAction="ifRoom"/>
+  <item
     android:id="@+id/action_main_settings"
     android:title="@string/settings"
     android:icon="@drawable/ic_settings_dark"

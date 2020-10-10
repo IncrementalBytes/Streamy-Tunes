@@ -82,7 +82,7 @@ public class ArtistDetails implements Parcelable {
 
     int totalCount = 0;
     for (Map.Entry<Long, AlbumDetails> albumDetail : Albums.entrySet()) {
-      totalCount += albumDetail.getValue().Songs.size();
+      totalCount += albumDetail.getValue().MediaMap.size();
     }
 
     return totalCount;

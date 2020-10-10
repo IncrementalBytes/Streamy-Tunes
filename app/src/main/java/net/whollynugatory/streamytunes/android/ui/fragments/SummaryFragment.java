@@ -31,13 +31,12 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
 import net.whollynugatory.streamytunes.android.PreferenceUtils;
 import net.whollynugatory.streamytunes.android.R;
 import net.whollynugatory.streamytunes.android.db.models.AlbumDetails;
 import net.whollynugatory.streamytunes.android.db.models.ArtistDetails;
-import net.whollynugatory.streamytunes.android.db.models.SongDetails;
+import net.whollynugatory.streamytunes.android.db.models.AuthorDetails;
+import net.whollynugatory.streamytunes.android.db.models.MediaDetails;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.io.IOException;
@@ -51,15 +50,30 @@ public class SummaryFragment extends Fragment {
 
   private HashMap<Long, AlbumDetails> mAlbumMap = new HashMap<>();
   private HashMap<Long, ArtistDetails> mArtistMap = new HashMap<>();
+  private HashMap<Long, AuthorDetails> mAuthorMap = new HashMap<>();
+  private boolean mIsAudiobook;
+  private boolean mIsPodcast;
+  private HashMap<Long, MediaDetails> mMediaMap = new HashMap<>();
+  private HashMap<Long, MediaDetails> mPlaylistMap = new HashMap<>();
+  private String mSelection;
 
-  private TextView mAlbumValueTextView;
-  private TextView mArtistValueTextView;
+  private TextView mFirstValueTextView;
+  private TextView mSecondValueTextView;
+  private TextView mThirdValueTextView;
 
   public interface OnSummaryListener {
 
-    void onSummaryAlbumsClicked(Collection<AlbumDetails> songDetailsCollection);
+    void onSummaryAlbumsClicked(Collection<AlbumDetails> albumDetailsCollection);
 
-    void onSummaryArtistsClicked(Collection<ArtistDetails> songDetailsCollection);
+    void onSummaryArtistsClicked(Collection<ArtistDetails> artistDetailsCollection);
+
+    void onSummaryPlaylistsClicked();
+
+    void onSummaryAuthorsClicked(Collection<AuthorDetails> authorDetailsCollection);
+
+    void onSummaryAudiobooksClicked(Collection<MediaDetails> audiobookDetailsCollection);
+
+    void onSummaryPodcastsClicked(Collection<MediaDetails> podcastDetailsCollection);
   }
 
   private OnSummaryListener mCallback;
@@ -105,19 +119,45 @@ public class SummaryFragment extends Fragment {
 
     Log.d(TAG, "++onCreateView(LayoutInflater, ViewGroup, Bundle)");
     View view = inflater.inflate(R.layout.fragment_summary, container, false);
+    CardView firstCardView = view.findViewById(R.id.summary_card_first);
+    CardView secondCardView = view.findViewById(R.id.summary_card_second);
+    CardView thirdCardView = view.findViewById(R.id.summary_card_third);
+    TextView firstTextView = view.findViewById(R.id.summary_text_first);
+    TextView secondTextView = view.findViewById(R.id.summary_text_second);
+    TextView thirdTextView = view.findViewById(R.id.summary_text_third);
 
-    CardView albumCardView = view.findViewById(R.id.summary_card_albums);
-    albumCardView.setOnClickListener(v -> mCallback.onSummaryAlbumsClicked(mAlbumMap.values()));
-    CardView artistCardView = view.findViewById(R.id.summary_card_artists);
-    artistCardView.setOnClickListener(v -> mCallback.onSummaryArtistsClicked(mArtistMap.values()));
+    mFirstValueTextView = view.findViewById(R.id.summary_text_first_value);
+    mSecondValueTextView = view.findViewById(R.id.summary_text_second_value);
+    mThirdValueTextView = view.findViewById(R.id.summary_text_third_value);
 
-    mAlbumValueTextView = view.findViewById(R.id.summary_text_albums_value);
-    mArtistValueTextView = view.findViewById(R.id.summary_text_artists_value);
-    FloatingActionButton fab = view.findViewById(R.id.summary_fab_sync);
-    fab.setOnClickListener(view1 -> getMediaList());
+    mSelection = MediaStore.Audio.Media.IS_MUSIC + " == ?";
+    mIsAudiobook = PreferenceUtils.getIsAudiobook(getContext());
+    mIsPodcast = PreferenceUtils.getIsPodcast(getContext());
+    firstTextView.setText(getString(R.string.albums));
+    firstCardView.setOnClickListener(v -> mCallback.onSummaryAlbumsClicked(mAlbumMap.values()));
+    secondTextView.setText(getString(R.string.artists));
+    secondCardView.setOnClickListener(v -> mCallback.onSummaryArtistsClicked(mArtistMap.values()));
+    thirdTextView.setText(getString(R.string.playlists));
+    thirdCardView.setOnClickListener(v -> mCallback.onSummaryPlaylistsClicked());
+    secondCardView.setVisibility(View.VISIBLE);
+    thirdCardView.setVisibility(View.VISIBLE);
+    if (mIsAudiobook) {
+      mSelection = MediaStore.Audio.Media.IS_AUDIOBOOK + " == ?";
+      firstTextView.setText(getString(R.string.authors));
+      firstCardView.setOnClickListener(v -> mCallback.onSummaryAuthorsClicked(mAuthorMap.values()));
+      secondTextView.setText(getString(R.string.audiobooks));
+      secondCardView.setOnClickListener(v -> mCallback.onSummaryAudiobooksClicked(mMediaMap.values()));
+      secondCardView.setVisibility(View.VISIBLE);
+      thirdCardView.setVisibility(View.INVISIBLE);
+    } else if (mIsPodcast) {
+      mSelection = MediaStore.Audio.Media.IS_PODCAST + " == ?";
+      firstTextView.setText(getString(R.string.podcasts));
+      firstCardView.setOnClickListener(v -> mCallback.onSummaryPodcastsClicked(mMediaMap.values()));
+      secondCardView.setVisibility(View.INVISIBLE);
+      thirdCardView.setVisibility(View.INVISIBLE);
+    }
 
     getMediaList();
-
     return view;
   }
 
@@ -146,14 +186,7 @@ public class SummaryFragment extends Fragment {
   private void getMediaList() {
 
     Log.d(TAG, "++getSongList()");
-    String selection = MediaStore.Audio.Media.IS_MUSIC + " == ?";
-    if (PreferenceUtils.getIsAudiobook(getContext())) {
-      selection = MediaStore.Audio.Media.IS_AUDIOBOOK + " == ?";
-    } else if (PreferenceUtils.getIsPodcast(getContext())) {
-      selection = MediaStore.Audio.Media.IS_PODCAST + " == ?";
-    }
-
-    String[] selectionArgs = new String[] {"1"};
+    String[] selectionArgs = new String[]{"1"};
     String sortOrder = MediaStore.Audio.Media.YEAR + " DESC";
     String[] projection = new String[]{
       MediaStore.Audio.Media._ID,
@@ -171,68 +204,82 @@ public class SummaryFragment extends Fragment {
     try (Cursor cursor = getContext().getContentResolver().query(
       MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
       projection,
-      selection,
+      mSelection,
       selectionArgs,
       sortOrder
     )) {
 
-      int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID);
-      int albumColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM);
-      int albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID);
-      int artistColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST);
-      int artistIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID);
-      int displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME);
-      int titleColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE);
-      int trackColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK);
-      int yearColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR);
-
       while (cursor.moveToNext()) {
         try {
-          SongDetails songDetails = new SongDetails();
-          songDetails.Id = cursor.getLong(idColumn);
-          songDetails.AlbumName = cursor.getString(albumColumn);
-          songDetails.AlbumId = cursor.getLong(albumIdColumn);
-          songDetails.ArtistName = cursor.getString(artistColumn);
-          songDetails.ArtistId = cursor.getLong(artistIdColumn);
-          songDetails.DisplayName = cursor.getString(displayNameColumn);
-          songDetails.LocalSource = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "" + songDetails.Id);
-          songDetails.Title = cursor.getString(titleColumn);
-          songDetails.Track = cursor.getInt(trackColumn);
-          songDetails.Year = cursor.getInt(yearColumn);
+          MediaDetails mediaDetails = new MediaDetails();
+          mediaDetails.Id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
+          mediaDetails.AlbumName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM));
+          mediaDetails.AlbumId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
+          mediaDetails.ArtistName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
+          mediaDetails.ArtistId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID));
+          mediaDetails.DisplayName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME));
+          mediaDetails.LocalSource = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "" + mediaDetails.Id);
+          mediaDetails.Title = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
+          mediaDetails.Track = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK));
+          mediaDetails.Year = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR));
 
-          songDetails.AlbumArt = getContext().getContentResolver().loadThumbnail(
-            songDetails.LocalSource,
+          mediaDetails.AlbumArt = getContext().getContentResolver().loadThumbnail(
+            mediaDetails.LocalSource,
             new Size(640, 480),
             null);
-          AlbumDetails albumDetails = mAlbumMap.get(songDetails.AlbumId);
-          if (albumDetails != null) { // album found, check for song
-            if (!albumDetails.Songs.containsKey(songDetails.Id)) { // song not found
-              mAlbumMap.get(songDetails.AlbumId).Songs.put(songDetails.Id, songDetails);
+          if (mIsAudiobook) {
+            AuthorDetails authorDetails = mAuthorMap.get(mediaDetails.ArtistId);
+            if (authorDetails != null) { // author found
+              MediaDetails media = authorDetails.Audiobooks.get(mediaDetails.AlbumId);
+              if (media == null) { // album found, check for song
+                mAuthorMap.get(mediaDetails.ArtistId).Audiobooks.put(mediaDetails.AlbumId, mediaDetails);
+              }
+            } else { // author not found
+              mAuthorMap.put(mediaDetails.ArtistId, mediaDetails.toAuthorDetails());
             }
-          } else { // album not found
-            mAlbumMap.put(songDetails.AlbumId, songDetails.toAlbumDetails());
-          }
-
-          ArtistDetails artistDetails = mArtistMap.get(songDetails.ArtistId);
-          if (artistDetails != null) { // artist found, check for album
-            AlbumDetails album = artistDetails.Albums.get(songDetails.AlbumId);
-            if (album != null) { // album found, check for song
-              if (!album.Songs.containsKey(songDetails.Id)) {
-                mArtistMap.get(songDetails.ArtistId).Albums.get(songDetails.AlbumId).Songs.put(songDetails.Id, songDetails);
+          } else if (mIsPodcast) {
+            if (!mMediaMap.containsKey(mediaDetails.Id)) {
+              mMediaMap.put(mediaDetails.Id, mediaDetails);
+            }
+          } else {
+            AlbumDetails albumDetails = mAlbumMap.get(mediaDetails.AlbumId);
+            if (albumDetails != null) { // album found, check for song
+              if (!albumDetails.MediaMap.containsKey(mediaDetails.Id)) { // song not found
+                mAlbumMap.get(mediaDetails.AlbumId).MediaMap.put(mediaDetails.Id, mediaDetails);
               }
             } else { // album not found
-              mArtistMap.get(songDetails.ArtistId).Albums.put(songDetails.AlbumId, songDetails.toAlbumDetails());
+              mAlbumMap.put(mediaDetails.AlbumId, mediaDetails.toAlbumDetails());
             }
-          } else { // artist not found
-            mArtistMap.put(songDetails.ArtistId, songDetails.toArtistDetails());
+
+            ArtistDetails artistDetails = mArtistMap.get(mediaDetails.ArtistId);
+            if (artistDetails != null) { // artist found, check for album
+              AlbumDetails album = artistDetails.Albums.get(mediaDetails.AlbumId);
+              if (album != null) { // album found, check for song
+                if (!album.MediaMap.containsKey(mediaDetails.Id)) {
+                  mArtistMap.get(mediaDetails.ArtistId).Albums.get(mediaDetails.AlbumId).MediaMap.put(mediaDetails.Id, mediaDetails);
+                }
+              } else { // album not found
+                mArtistMap.get(mediaDetails.ArtistId).Albums.put(mediaDetails.AlbumId, mediaDetails.toAlbumDetails());
+              }
+            } else { // artist not found
+              mArtistMap.put(mediaDetails.ArtistId, mediaDetails.toArtistDetails());
+            }
           }
         } catch (NullPointerException | IOException e) {
           Log.e(TAG, "Failed to create song details object.", e);
         }
       }
 
-      mAlbumValueTextView.setText(String.format(getString(R.string.format_albums), mAlbumMap.size()));
-      mArtistValueTextView.setText(String.format(getString(R.string.format_albums), mArtistMap.size()));
+      if (mIsAudiobook) {
+        mFirstValueTextView.setText(String.format(getString(R.string.format_authors), mArtistMap.size()));
+        mSecondValueTextView.setText(String.format(getString(R.string.format_audiobooks), mAlbumMap.size()));
+      } else if (mIsPodcast) {
+        mFirstValueTextView.setText(String.format(getString(R.string.format_podcasts), mAlbumMap.size()));
+      } else {
+        mFirstValueTextView.setText(String.format(getString(R.string.format_albums), mAlbumMap.size()));
+        mSecondValueTextView.setText(String.format(getString(R.string.format_artists), mArtistMap.size()));
+        mThirdValueTextView.setText(String.format(getString(R.string.format_playists), mPlaylistMap.size()));
+      }
     }
   }
 }

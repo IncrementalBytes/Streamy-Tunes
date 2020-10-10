@@ -31,7 +31,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import net.whollynugatory.streamytunes.android.R;
 import net.whollynugatory.streamytunes.android.db.models.AlbumDetails;
-import net.whollynugatory.streamytunes.android.db.models.SongDetails;
+import net.whollynugatory.streamytunes.android.db.models.MediaDetails;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.ArrayList;
@@ -40,21 +40,21 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class SongsFragment extends Fragment {
+public class MediaFragment extends Fragment {
 
-  private static final String TAG = BaseActivity.BASE_TAG + SongsFragment.class.getSimpleName();
+  private static final String TAG = BaseActivity.BASE_TAG + MediaFragment.class.getSimpleName();
 
-  public interface OnSongListener {
+  public interface OnMediaListener {
 
-    void onSongClicked(Collection<SongDetails> songDetailsList);
+    void onMediaClicked(Collection<MediaDetails> mediaDetailsList);
   }
 
-  private OnSongListener mCallback;
-  private List<SongDetails> mSongDetailsList;
+  private OnMediaListener mCallback;
+  private List<MediaDetails> mMediaDetailsList;
 
   private RecyclerView mRecyclerView;
 
-  public static SongsFragment newInstance(AlbumDetails albumDetails) {
+  public static MediaFragment newInstance(AlbumDetails albumDetails) {
 
     Log.d(TAG, "++newInstance(AlbumDetails)");
     List<AlbumDetails> albums = new ArrayList<>();
@@ -62,12 +62,12 @@ public class SongsFragment extends Fragment {
     return newInstance(new ArrayList<>(albums));
   }
 
-  public static SongsFragment newInstance(ArrayList<AlbumDetails> albumDetailsList) {
+  public static MediaFragment newInstance(ArrayList<AlbumDetails> albumDetailsList) {
 
     Log.d(TAG, "++newInstance(ArrayList<AlbumDetails>)");
     Bundle arguments = new Bundle();
     arguments.putParcelableArrayList(BaseActivity.ARG_ALBUM_DETAILS_COLLECTION, albumDetailsList);
-    SongsFragment fragment = new SongsFragment();
+    MediaFragment fragment = new MediaFragment();
     fragment.setArguments(arguments);
     return fragment;
   }
@@ -90,7 +90,7 @@ public class SongsFragment extends Fragment {
 
     Log.d(TAG, "++onAttach(Context)");
     try {
-      mCallback = (OnSongListener) context;
+      mCallback = (OnMediaListener) context;
     } catch (ClassCastException e) {
       throw new ClassCastException(
         String.format(Locale.ENGLISH, "Missing interface implementations for %s", context.toString()));
@@ -99,11 +99,11 @@ public class SongsFragment extends Fragment {
     Bundle arguments = getArguments();
     if (arguments != null) {
       List<AlbumDetails> albumDetails = arguments.getParcelableArrayList(BaseActivity.ARG_ALBUM_DETAILS_COLLECTION);
-      mSongDetailsList = new ArrayList<>();
+      mMediaDetailsList = new ArrayList<>();
       if (albumDetails != null) {
         for (AlbumDetails album : albumDetails) {
-          for (Map.Entry<Long, SongDetails> song : album.Songs.entrySet()) {
-            mSongDetailsList.add(song.getValue());
+          for (Map.Entry<Long, MediaDetails> media : album.MediaMap.entrySet()) {
+            mMediaDetailsList.add(media.getValue());
           }
         }
       } else {
@@ -154,29 +154,29 @@ public class SongsFragment extends Fragment {
 
   private void updateUI() {
 
-    SongAdapter songAdapter = new SongAdapter(getContext());
-    mRecyclerView.setAdapter(songAdapter);
-    songAdapter.setSongInfoList(mSongDetailsList);
+    MediaAdapter mediaAdapter = new MediaAdapter(getContext());
+    mRecyclerView.setAdapter(mediaAdapter);
+    mediaAdapter.setMediaDetailsList(mMediaDetailsList);
   }
 
   /*
-    Adapter class for Song objects
+    Adapter class for Media objects
    */
-  private class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongHolder> {
+  private class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaHolder> {
 
     /*
-      Holder class for Song objects
+      Holder class for Media objects
      */
-    class SongHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    class MediaHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
       private final ImageView mAlbumImage;
       private final TextView mAlbumTextView;
       private final TextView mArtistTextView;
       private final TextView mTitleTextView;
 
-      private SongDetails mSongDetails;
+      private MediaDetails mMediaDetails;
 
-      SongHolder(View itemView) {
+      MediaHolder(View itemView) {
         super(itemView);
 
         mAlbumImage = itemView.findViewById(R.id.song_item_image_album);
@@ -187,60 +187,60 @@ public class SongsFragment extends Fragment {
         itemView.setOnClickListener(this);
       }
 
-      void bind(SongDetails songDetails) {
+      void bind(MediaDetails mediaDetails) {
 
-        mSongDetails = songDetails;
-        if (mSongDetails != null) {
-          if (mSongDetails.AlbumArt != null) {
-            mAlbumImage.setImageBitmap(mSongDetails.AlbumArt);
+        mMediaDetails = mediaDetails;
+        if (mMediaDetails != null) {
+          if (mMediaDetails.AlbumArt != null) {
+            mAlbumImage.setImageBitmap(mMediaDetails.AlbumArt);
           }
 
-          mAlbumTextView.setText(mSongDetails.AlbumName);
-          mTitleTextView.setText(mSongDetails.Title);
-          mArtistTextView.setText(mSongDetails.ArtistName);
+          mAlbumTextView.setText(mMediaDetails.AlbumName);
+          mTitleTextView.setText(mMediaDetails.Title);
+          mArtistTextView.setText(mMediaDetails.ArtistName);
         }
       }
 
       @Override
       public void onClick(View view) {
 
-        List<SongDetails> songDetailsList = new ArrayList<>();
+        List<MediaDetails> mediaDetailsList = new ArrayList<>();
         boolean addedToList = false;
-        for (SongDetails songDetails : mSongDetailsList) {
+        for (MediaDetails mediaDetails : mMediaDetailsList) {
           if (addedToList) {
-            songDetailsList.add(songDetails);
-          } else if (songDetails.Id == mSongDetails.Id) {
+            mediaDetailsList.add(mediaDetails);
+          } else if (mediaDetails.Id == mMediaDetails.Id) {
             addedToList = true;
-            songDetailsList.add(songDetails);
+            mediaDetailsList.add(mediaDetails);
           }
         }
 
-        mCallback.onSongClicked(songDetailsList);
+        mCallback.onMediaClicked(mediaDetailsList);
       }
     }
 
     private final LayoutInflater mInflater;
-    private List<SongDetails> mSongDetailsList;
+    private List<MediaDetails> mMediaDetailsList;
 
-    SongAdapter(Context context) {
+    MediaAdapter(Context context) {
 
       mInflater = LayoutInflater.from(context);
     }
 
     @NonNull
     @Override
-    public SongAdapter.SongHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public MediaAdapter.MediaHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
-      View itemView = mInflater.inflate(R.layout.item_song, parent, false);
-      return new SongAdapter.SongHolder(itemView);
+      View itemView = mInflater.inflate(R.layout.item_media, parent, false);
+      return new MediaAdapter.MediaHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull SongAdapter.SongHolder holder, int position) {
+    public void onBindViewHolder(@NonNull MediaAdapter.MediaHolder holder, int position) {
 
-      if (mSongDetailsList != null) {
-        SongDetails songDetails = mSongDetailsList.get(position);
-        holder.bind(songDetails);
+      if (mMediaDetailsList != null) {
+        MediaDetails mediaDetails = mMediaDetailsList.get(position);
+        holder.bind(mediaDetails);
       } else {
         // TODO: No songs!
       }
@@ -249,18 +249,18 @@ public class SongsFragment extends Fragment {
     @Override
     public int getItemCount() {
 
-      if (mSongDetailsList != null) {
-        return mSongDetailsList.size();
+      if (mMediaDetailsList != null) {
+        return mMediaDetailsList.size();
       } else {
         return 0;
       }
     }
 
-    void setSongInfoList(Collection<SongDetails> songDetailsCollection) {
+    void setMediaDetailsList(Collection<MediaDetails> mediaDetailsCollection) {
 
-      Log.d(TAG, "++setSongInfoList(Collection<SongDetails>)");
-      mSongDetailsList = new ArrayList<>();
-      mSongDetailsList.addAll(songDetailsCollection);
+      Log.d(TAG, "++setMediaDetailsList(Collection<MediaDetails>)");
+      mMediaDetailsList = new ArrayList<>();
+      mMediaDetailsList.addAll(mediaDetailsCollection);
       notifyDataSetChanged();
     }
   }

@@ -33,7 +33,7 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.ui.PlayerView;
 
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.db.models.SongDetails;
+import net.whollynugatory.streamytunes.android.db.models.MediaDetails;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.ArrayList;
@@ -57,7 +57,7 @@ public class PlayerFragment extends Fragment {
   private SimpleExoPlayer mPlayer;
   private PlayerView mPlayerView;
   private boolean mPlayWhenReady = true;
-  private List<SongDetails> mSongDetailsList;
+  private List<MediaDetails> mMediaDetailsList;
 
   @SuppressLint("InlinedApi")
   private void hideSystemUi() {
@@ -69,11 +69,11 @@ public class PlayerFragment extends Fragment {
       | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
   }
 
-  public static PlayerFragment newInstance(ArrayList<SongDetails> songDetailsList) {
+  public static PlayerFragment newInstance(ArrayList<MediaDetails> mediaDetailsList) {
 
-    Log.d(TAG, "++newInstance(Collection<SongDetails>)");
+    Log.d(TAG, "++newInstance(Collection<MediaDetails>)");
     Bundle arguments = new Bundle();
-    arguments.putParcelableArrayList(BaseActivity.ARG_SONG_DETAILS_LIST, songDetailsList);
+    arguments.putParcelableArrayList(BaseActivity.ARG_MEDIA_DETAILS_LIST, mediaDetailsList);
     PlayerFragment fragment = new PlayerFragment();
     fragment.setArguments(arguments);
     return fragment;
@@ -93,7 +93,7 @@ public class PlayerFragment extends Fragment {
 
     Bundle arguments = getArguments();
     if (arguments != null) {
-      mSongDetailsList = arguments.getParcelableArrayList(BaseActivity.ARG_SONG_DETAILS_LIST);
+      mMediaDetailsList = arguments.getParcelableArrayList(BaseActivity.ARG_MEDIA_DETAILS_LIST);
     } else {
       Log.e(TAG, "Arguments were null.");
     }
@@ -154,12 +154,12 @@ public class PlayerFragment extends Fragment {
     mPlayerView.setPlayer(mPlayer);
 
     boolean startAdding = false;
-    for (SongDetails songDetails : mSongDetailsList) {
+    for (MediaDetails mediaDetails : mMediaDetailsList) {
       if (startAdding) {
-        mPlayer.addMediaItem(MediaItem.fromUri(songDetails.LocalSource));
+        mPlayer.addMediaItem(MediaItem.fromUri(mediaDetails.LocalSource));
       } else {
         startAdding = true;
-        mPlayer.setMediaItem(MediaItem.fromUri(songDetails.LocalSource));
+        mPlayer.setMediaItem(MediaItem.fromUri(mediaDetails.LocalSource));
       }
     }
 

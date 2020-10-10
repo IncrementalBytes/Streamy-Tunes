@@ -36,11 +36,12 @@ import net.whollynugatory.streamytunes.android.PreferenceUtils;
 import net.whollynugatory.streamytunes.android.R;
 import net.whollynugatory.streamytunes.android.db.models.AlbumDetails;
 import net.whollynugatory.streamytunes.android.db.models.ArtistDetails;
-import net.whollynugatory.streamytunes.android.db.models.SongDetails;
+import net.whollynugatory.streamytunes.android.db.models.AuthorDetails;
+import net.whollynugatory.streamytunes.android.db.models.MediaDetails;
 import net.whollynugatory.streamytunes.android.ui.fragments.AlbumsFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.ArtistsFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.PlayerFragment;
-import net.whollynugatory.streamytunes.android.ui.fragments.SongsFragment;
+import net.whollynugatory.streamytunes.android.ui.fragments.MediaFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.SummaryFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.UserSettingsFragment;
 
@@ -51,7 +52,7 @@ public class MainActivity extends BaseActivity implements
   AlbumsFragment.OnAlbumListener,
   ArtistsFragment.OnArtistListener,
   PlayerFragment.OnPlayerListener,
-  SongsFragment.OnSongListener,
+  MediaFragment.OnMediaListener,
   SummaryFragment.OnSummaryListener {
 
   private static final String TAG = BaseActivity.BASE_TAG + MainActivity.class.getSimpleName();
@@ -113,9 +114,16 @@ public class MainActivity extends BaseActivity implements
 
     Log.d(TAG, "++onOptionsItemSelected(MenuItem)");
     if (item.getItemId() == R.id.action_main_home) {
+      // TODO: disable home menu
+      // TODO: show (if hidden) bottom navigation
       replaceFragment(SummaryFragment.newInstance());
     } else if (item.getItemId() == R.id.action_main_settings) {
+      // TODO: hide bottom navigation
+      // TODO: disable settings and sync menu
       replaceFragment(UserSettingsFragment.newInstance());
+    } else if (item.getItemId() == R.id.action_main_sync) {
+      // TODO: disable sync menu
+      replaceFragment(SummaryFragment.newInstance());
     }
 
     return super.onOptionsItemSelected(item);
@@ -137,14 +145,14 @@ public class MainActivity extends BaseActivity implements
   public void onAlbumClicked(AlbumDetails albumDetails) {
 
     Log.d(TAG, "++onAlbumClicked(AlbumDetails)");
-    replaceFragment(SongsFragment.newInstance(albumDetails));
+    replaceFragment(MediaFragment.newInstance(albumDetails));
   }
 
   @Override
   public void onArtistClicked(ArtistDetails artistDetails) {
 
     Log.d(TAG, "++onArtistClicked(ArtistDetails)");
-    replaceFragment(SongsFragment.newInstance(new ArrayList<>(artistDetails.Albums.values())));
+    replaceFragment(MediaFragment.newInstance(new ArrayList<>(artistDetails.Albums.values())));
   }
 
   @Override
@@ -154,7 +162,7 @@ public class MainActivity extends BaseActivity implements
   }
 
   @Override
-  public void onSongClicked(Collection<SongDetails> songDetailsCollection) {
+  public void onMediaClicked(Collection<MediaDetails> songDetailsCollection) {
 
     Log.d(TAG, "++onSongClicked(List<SongDetails>)");
     replaceFragment(PlayerFragment.newInstance(new ArrayList<>(songDetailsCollection)));
@@ -174,9 +182,33 @@ public class MainActivity extends BaseActivity implements
     replaceFragment(ArtistsFragment.newInstance(new ArrayList<>(artistDetailsList)));
   }
 
+  @Override
+  public void onSummaryAudiobooksClicked(Collection<MediaDetails> audiobookDetailsCollection) {
+
+    Log.d(TAG, "++onSummaryPlaylistsClicked(onSummaryAudiobooksClicked(Collection<MediaDetails>)");
+  }
+
+  @Override
+  public void onSummaryAuthorsClicked(Collection<AuthorDetails> authorDetailsCollection) {
+
+    Log.d(TAG, "++onSummaryAuthorsClicked(Collection<AuthorDetails>)");
+  }
+
+  @Override
+  public void onSummaryPlaylistsClicked() {
+
+    Log.d(TAG, "++onSummaryPlaylistsClicked()");
+  }
+
+  @Override
+  public void onSummaryPodcastsClicked(Collection<MediaDetails> podcastDetailsCollection) {
+
+    Log.d(TAG, "++onSummaryPodcastsClicked(Collection<MediaDetails>)");
+  }
+
   /*
-    Private Methods
-   */
+      Private Methods
+     */
   private void checkForPermission(String permissionName, int permissionId) {
 
     Log.d(TAG, "++checkForWritePermission(String, int)");

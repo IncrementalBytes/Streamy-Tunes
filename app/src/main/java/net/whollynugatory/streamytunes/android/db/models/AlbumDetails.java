@@ -27,7 +27,7 @@ public class AlbumDetails implements Parcelable {
   public Bitmap Art;
   public String ArtistName;
   public String Name;
-  public HashMap<Long, SongDetails> Songs;
+  public HashMap<Long, MediaDetails> MediaMap;
 
   public AlbumDetails() {
 
@@ -35,7 +35,7 @@ public class AlbumDetails implements Parcelable {
     Art = null;
     ArtistName = "";
     Name = "";
-    Songs = new HashMap<>();
+    MediaMap = new HashMap<>();
   }
 
   protected AlbumDetails(Parcel in) {

@@ -20,7 +20,7 @@ import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class SongDetails implements Parcelable {
+public class MediaDetails implements Parcelable {
 
   public long Id;
   public Bitmap AlbumArt;
@@ -34,7 +34,7 @@ public class SongDetails implements Parcelable {
   public long Track;
   public long Year;
 
-  public SongDetails() {
+  public MediaDetails() {
 
     Id = 0;
     AlbumArt = null;
@@ -49,7 +49,7 @@ public class SongDetails implements Parcelable {
     Year = 0;
   }
 
-  protected SongDetails(Parcel in) {
+  protected MediaDetails(Parcel in) {
 
     Id = in.readLong();
     AlbumId = in.readLong();
@@ -66,15 +66,15 @@ public class SongDetails implements Parcelable {
   /*
       Object Override(s)
      */
-  public static final Creator<SongDetails> CREATOR = new Creator<SongDetails>() {
+  public static final Creator<MediaDetails> CREATOR = new Creator<MediaDetails>() {
     @Override
-    public SongDetails createFromParcel(Parcel in) {
-      return new SongDetails(in);
+    public MediaDetails createFromParcel(Parcel in) {
+      return new MediaDetails(in);
     }
 
     @Override
-    public SongDetails[] newArray(int size) {
-      return new SongDetails[size];
+    public MediaDetails[] newArray(int size) {
+      return new MediaDetails[size];
     }
   };
 
@@ -108,7 +108,7 @@ public class SongDetails implements Parcelable {
     albumDetails.Art = AlbumArt;
     albumDetails.ArtistName = ArtistName;
     albumDetails.Name = AlbumName;
-    albumDetails.Songs.put(Id, this);
+    albumDetails.MediaMap.put(Id, this);
     return albumDetails;
   }
 
@@ -119,5 +119,14 @@ public class SongDetails implements Parcelable {
     artistDetails.Name = ArtistName;
     artistDetails.Albums.put(AlbumId, toAlbumDetails());
     return artistDetails;
+  }
+
+  public AuthorDetails toAuthorDetails() {
+
+    AuthorDetails authorDetails = new AuthorDetails();
+    authorDetails.Id = ArtistId;
+    authorDetails.Name = ArtistName;
+    authorDetails.Audiobooks.put(AlbumId, this);
+    return authorDetails;
   }
 }
