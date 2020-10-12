@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Objects;
 
 public class SummaryFragment extends Fragment {
 
@@ -186,6 +187,29 @@ public class SummaryFragment extends Fragment {
   private void getMediaList() {
 
     Log.d(TAG, "++getSongList()");
+    if (PreferenceUtils.getIsExternalContent(getActivity())) {
+      getContent(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
+    }
+
+    if (PreferenceUtils.getIsInternalContent(getActivity())) {
+      getContent(MediaStore.Audio.Media.INTERNAL_CONTENT_URI);
+    }
+
+    if (mIsAudiobook) {
+      mFirstValueTextView.setText(String.format(getString(R.string.format_authors), mArtistMap.size()));
+      mSecondValueTextView.setText(String.format(getString(R.string.format_audiobooks), mAlbumMap.size()));
+    } else if (mIsPodcast) {
+      mFirstValueTextView.setText(String.format(getString(R.string.format_podcasts), mAlbumMap.size()));
+    } else {
+      mFirstValueTextView.setText(String.format(getString(R.string.format_albums), mAlbumMap.size()));
+      mSecondValueTextView.setText(String.format(getString(R.string.format_artists), mArtistMap.size()));
+      mThirdValueTextView.setText(String.format(getString(R.string.format_playists), mPlaylistMap.size()));
+    }
+  }
+
+  private void getContent(Uri contentSource) {
+
+    Log.d(TAG, "++getContent(Uri)");
     String[] selectionArgs = new String[]{"1"};
     String sortOrder = MediaStore.Audio.Media.YEAR + " DESC";
     String[] projection = new String[]{
@@ -200,15 +224,14 @@ public class SummaryFragment extends Fragment {
       MediaStore.Audio.Media.YEAR
     };
 
-    // TODO: add support for internal/external querying
-    try (Cursor cursor = getContext().getContentResolver().query(
-      MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+    try (Cursor cursor = requireContext().getContentResolver().query(
+      contentSource,
       projection,
       mSelection,
       selectionArgs,
-      sortOrder
-    )) {
+      sortOrder)) {
 
+      assert cursor != null;
       while (cursor.moveToNext()) {
         try {
           MediaDetails mediaDetails = new MediaDetails();
@@ -223,7 +246,7 @@ public class SummaryFragment extends Fragment {
           mediaDetails.Track = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK));
           mediaDetails.Year = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR));
 
-          mediaDetails.AlbumArt = getContext().getContentResolver().loadThumbnail(
+          mediaDetails.AlbumArt = requireContext().getContentResolver().loadThumbnail(
             mediaDetails.LocalSource,
             new Size(640, 480),
             null);
@@ -232,7 +255,7 @@ public class SummaryFragment extends Fragment {
             if (authorDetails != null) { // author found
               MediaDetails media = authorDetails.Audiobooks.get(mediaDetails.AlbumId);
               if (media == null) { // album found, check for song
-                mAuthorMap.get(mediaDetails.ArtistId).Audiobooks.put(mediaDetails.AlbumId, mediaDetails);
+                Objects.requireNonNull(mAuthorMap.get(mediaDetails.ArtistId)).Audiobooks.put(mediaDetails.AlbumId, mediaDetails);
               }
             } else { // author not found
               mAuthorMap.put(mediaDetails.ArtistId, mediaDetails.toAuthorDetails());
@@ -245,7 +268,7 @@ public class SummaryFragment extends Fragment {
             AlbumDetails albumDetails = mAlbumMap.get(mediaDetails.AlbumId);
             if (albumDetails != null) { // album found, check for song
               if (!albumDetails.MediaMap.containsKey(mediaDetails.Id)) { // song not found
-                mAlbumMap.get(mediaDetails.AlbumId).MediaMap.put(mediaDetails.Id, mediaDetails);
+                Objects.requireNonNull(mAlbumMap.get(mediaDetails.AlbumId)).MediaMap.put(mediaDetails.Id, mediaDetails);
               }
             } else { // album not found
               mAlbumMap.put(mediaDetails.AlbumId, mediaDetails.toAlbumDetails());
@@ -256,10 +279,12 @@ public class SummaryFragment extends Fragment {
               AlbumDetails album = artistDetails.Albums.get(mediaDetails.AlbumId);
               if (album != null) { // album found, check for song
                 if (!album.MediaMap.containsKey(mediaDetails.Id)) {
-                  mArtistMap.get(mediaDetails.ArtistId).Albums.get(mediaDetails.AlbumId).MediaMap.put(mediaDetails.Id, mediaDetails);
+                  Objects.requireNonNull(
+                    Objects.requireNonNull(
+                      mArtistMap.get(mediaDetails.ArtistId)).Albums.get(mediaDetails.AlbumId)).MediaMap.put(mediaDetails.Id, mediaDetails);
                 }
               } else { // album not found
-                mArtistMap.get(mediaDetails.ArtistId).Albums.put(mediaDetails.AlbumId, mediaDetails.toAlbumDetails());
+                Objects.requireNonNull(mArtistMap.get(mediaDetails.ArtistId)).Albums.put(mediaDetails.AlbumId, mediaDetails.toAlbumDetails());
               }
             } else { // artist not found
               mArtistMap.put(mediaDetails.ArtistId, mediaDetails.toArtistDetails());
@@ -268,17 +293,6 @@ public class SummaryFragment extends Fragment {
         } catch (NullPointerException | IOException e) {
           Log.e(TAG, "Failed to create song details object.", e);
         }
-      }
-
-      if (mIsAudiobook) {
-        mFirstValueTextView.setText(String.format(getString(R.string.format_authors), mArtistMap.size()));
-        mSecondValueTextView.setText(String.format(getString(R.string.format_audiobooks), mAlbumMap.size()));
-      } else if (mIsPodcast) {
-        mFirstValueTextView.setText(String.format(getString(R.string.format_podcasts), mAlbumMap.size()));
-      } else {
-        mFirstValueTextView.setText(String.format(getString(R.string.format_albums), mAlbumMap.size()));
-        mSecondValueTextView.setText(String.format(getString(R.string.format_artists), mArtistMap.size()));
-        mThirdValueTextView.setText(String.format(getString(R.string.format_playists), mPlaylistMap.size()));
       }
     }
   }

@@ -149,7 +149,7 @@ public class AlbumsFragment extends Fragment {
      */
     class AlbumHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-      private final ImageView mAlbumImage;
+      private final ImageView mMediaImage;
       private final TextView mAlbumTextView;
       private final TextView mArtistTextView;
       private final TextView mSongsTextView;
@@ -159,10 +159,10 @@ public class AlbumsFragment extends Fragment {
       AlbumHolder(View itemView) {
         super(itemView);
 
-        mAlbumImage = itemView.findViewById(R.id.album_item_image_album);
-        mAlbumTextView = itemView.findViewById(R.id.album_item_text_album);
-        mArtistTextView = itemView.findViewById(R.id.album_item_text_artist);
-        mSongsTextView = itemView.findViewById(R.id.album_item_text_songs);
+        mMediaImage = itemView.findViewById(R.id.media_item_image);
+        mAlbumTextView = itemView.findViewById(R.id.media_item_text_title);
+        mArtistTextView = itemView.findViewById(R.id.media_item_text_subtitle);
+        mSongsTextView = itemView.findViewById(R.id.media_item_text_details);
 
         itemView.setOnClickListener(this);
       }
@@ -173,7 +173,7 @@ public class AlbumsFragment extends Fragment {
 
         if (mAlbumDetails != null) {
           if (mAlbumDetails.Art != null) {
-            mAlbumImage.setImageBitmap(mAlbumDetails.Art);
+            mMediaImage.setImageBitmap(mAlbumDetails.Art);
           }
 
           mAlbumTextView.setText(mAlbumDetails.Name);
@@ -201,7 +201,7 @@ public class AlbumsFragment extends Fragment {
     @Override
     public AlbumHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
-      View itemView = mInflater.inflate(R.layout.item_album, parent, false);
+      View itemView = mInflater.inflate(R.layout.item_media, parent, false);
       return new AlbumHolder(itemView);
     }
 

@@ -150,7 +150,7 @@ public class PlayerFragment extends Fragment {
   private void initializePlayer() {
 
     Log.d(TAG, "++initializePlayer()");
-    mPlayer = new SimpleExoPlayer.Builder(getActivity()).build();
+    mPlayer = new SimpleExoPlayer.Builder(requireActivity()).build();
     mPlayerView.setPlayer(mPlayer);
 
     boolean startAdding = false;

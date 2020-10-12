@@ -56,4 +56,5 @@
   <string name="sync">Sync</string>
   <string name="casts">Podcasts</string>
   <string name="format_songs">Number of songs: %d</string>
+  <string name="fragment_albums">Albums</string>
 </resources>

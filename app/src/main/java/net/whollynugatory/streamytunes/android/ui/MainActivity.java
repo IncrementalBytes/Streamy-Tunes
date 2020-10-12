@@ -57,8 +57,6 @@ public class MainActivity extends BaseActivity implements
 
   private static final String TAG = BaseActivity.BASE_TAG + MainActivity.class.getSimpleName();
 
-  private BottomNavigationView mNavigationView;
-
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -66,11 +64,26 @@ public class MainActivity extends BaseActivity implements
     Log.d(TAG, "++onCreate(Bundle)");
     setContentView(R.layout.activity_main);
     Toolbar mainToolbar = findViewById(R.id.main_toolbar);
-    mNavigationView = findViewById(R.id.main_nav_bottom);
-
+    BottomNavigationView navigationView = findViewById(R.id.main_nav_bottom);
     setSupportActionBar(mainToolbar);
 
-    mNavigationView.setOnNavigationItemSelectedListener(menuItem -> {
+    getSupportFragmentManager().addOnBackStackChangedListener(() -> {
+      Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.main_fragment_container);
+      if (fragment != null) {
+        String fragmentClassName = fragment.getClass().getName();
+        if (fragmentClassName.equals(AlbumsFragment.class.getName())) {
+          setTitle(getString(R.string.albums));
+        } else if (fragmentClassName.equals(ArtistsFragment.class.getName())) {
+          setTitle(getString(R.string.artists));
+        } else if (fragmentClassName.equals(UserSettingsFragment.class.getName())) {
+          setTitle(getString(R.string.settings));
+        } else {
+          setTitle(getString(R.string.app_name));
+        }
+      }
+    });
+
+    navigationView.setOnNavigationItemSelectedListener(menuItem -> {
 
       Log.d(TAG, "++onNavigationItemSelectedListener(MenuItem)");
       switch (menuItem.getItemId()) {
@@ -91,7 +104,7 @@ public class MainActivity extends BaseActivity implements
       return false;
     });
 
-    checkForPermission(Manifest.permission.READ_EXTERNAL_STORAGE, BaseActivity.REQUEST_STORAGE_PERMISSIONS);
+    checkForPermission();
   }
 
   @Override
@@ -134,7 +147,7 @@ public class MainActivity extends BaseActivity implements
 
     Log.d(TAG, "++onRequestPermissionsResult(int, String[], int[])");
     if (requestCode == BaseActivity.REQUEST_STORAGE_PERMISSIONS) {
-      checkForPermission(Manifest.permission.READ_EXTERNAL_STORAGE, BaseActivity.REQUEST_STORAGE_PERMISSIONS);
+      checkForPermission();
     }
   }
 
@@ -209,16 +222,12 @@ public class MainActivity extends BaseActivity implements
   /*
       Private Methods
      */
-  private void checkForPermission(String permissionName, int permissionId) {
+  private void checkForPermission() {
 
     Log.d(TAG, "++checkForWritePermission(String, int)");
-    if (ContextCompat.checkSelfPermission(this, permissionName) != PackageManager.PERMISSION_GRANTED) {
-      if (ActivityCompat.shouldShowRequestPermissionRationale(this, permissionName)) {
-        String requestMessage = getString(R.string.permission_default);
-        if (permissionId == BaseActivity.REQUEST_STORAGE_PERMISSIONS) {
-          requestMessage = getString(R.string.permission_storage);
-        }
-
+    if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+      if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+        String requestMessage = getString(R.string.permission_storage);
         Snackbar.make(
           findViewById(R.id.main_fragment_container),
           requestMessage,
@@ -227,17 +236,15 @@ public class MainActivity extends BaseActivity implements
             getString(R.string.ok),
             view -> ActivityCompat.requestPermissions(
               MainActivity.this,
-              new String[]{permissionName},
-              permissionId))
+              new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+              BaseActivity.REQUEST_STORAGE_PERMISSIONS))
           .show();
       } else {
-        ActivityCompat.requestPermissions(this, new String[]{permissionName}, permissionId);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, BaseActivity.REQUEST_STORAGE_PERMISSIONS);
       }
     } else {
-      Log.d(TAG, "Permission granted: " + permissionName);
-      if (permissionId == BaseActivity.REQUEST_STORAGE_PERMISSIONS) {
-        replaceFragment(SummaryFragment.newInstance());
-      }
+      Log.d(TAG, "Permission granted: " + Manifest.permission.READ_EXTERNAL_STORAGE);
+      replaceFragment(SummaryFragment.newInstance());
     }
   }
 

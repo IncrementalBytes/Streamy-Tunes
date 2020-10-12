@@ -23,12 +23,12 @@ import androidx.preference.PreferenceManager;
 
 public class PreferenceUtils {
 
-  public static boolean getIsExternalSource(Context context) {
+  public static boolean getIsExternalContent(Context context) {
 
     return getBooleanPref(context, R.string.pref_key_is_external);
   }
 
-  public static boolean getIsInternalSource(Context context) {
+  public static boolean getIsInternalContent(Context context) {
 
     return getBooleanPref(context, R.string.pref_key_is_internal);
   }
@@ -77,6 +77,7 @@ public class PreferenceUtils {
   }
 
   public static void setIsPodcast(Context context) {
+
     PreferenceManager.getDefaultSharedPreferences(context)
       .edit()
       .putBoolean(context.getString(R.string.pref_key_is_audiobook), false)

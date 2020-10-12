@@ -179,10 +179,10 @@ public class MediaFragment extends Fragment {
       MediaHolder(View itemView) {
         super(itemView);
 
-        mAlbumImage = itemView.findViewById(R.id.song_item_image_album);
-        mAlbumTextView = itemView.findViewById(R.id.song_item_text_album);
-        mArtistTextView = itemView.findViewById(R.id.song_item_text_artist);
-        mTitleTextView = itemView.findViewById(R.id.song_item_text_title);
+        mAlbumImage = itemView.findViewById(R.id.media_item_image);
+        mAlbumTextView = itemView.findViewById(R.id.media_item_text_details);
+        mArtistTextView = itemView.findViewById(R.id.media_item_text_subtitle);
+        mTitleTextView = itemView.findViewById(R.id.media_item_text_title);
 
         itemView.setOnClickListener(this);
       }

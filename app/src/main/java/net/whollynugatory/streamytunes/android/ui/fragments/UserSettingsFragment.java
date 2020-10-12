@@ -54,7 +54,7 @@ public class UserSettingsFragment extends PreferenceFragmentCompat {
 
     Log.d(TAG, "++onCreatePreferences(Bundle, String)");
     addPreferencesFromResource(R.xml.app_preferences);
-    setupSourcePreferences();
+    setupContentPreferences();
     setupAppVersionPreference();
   }
 
@@ -70,9 +70,9 @@ public class UserSettingsFragment extends PreferenceFragmentCompat {
     }
   }
 
-  private void setupSourcePreferences() {
+  private void setupContentPreferences() {
 
-    Log.d(TAG, "++setupSourcePreferences()");
+    Log.d(TAG, "++setupContentPreferences()");
     CheckBoxPreference externalCheckBoxPreference = findPreference(getString(R.string.pref_key_is_external));
     if (externalCheckBoxPreference != null) {
       externalCheckBoxPreference.setOnPreferenceChangeListener((preference, newValue) -> {

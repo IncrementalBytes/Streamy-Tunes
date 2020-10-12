@@ -25,6 +25,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -149,7 +150,6 @@ public class ArtistsFragment extends Fragment {
      */
     class ArtistsHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-      private final ImageView mArtistsImage;
       private final TextView mAlbumsTextView;
       private final TextView mArtistTextView;
       private final TextView mSongsTextView;
@@ -159,10 +159,11 @@ public class ArtistsFragment extends Fragment {
       ArtistsHolder(View itemView) {
         super(itemView);
 
-        mArtistsImage = itemView.findViewById(R.id.artist_item_image_artist);
-        mAlbumsTextView = itemView.findViewById(R.id.artist_item_text_albums);
-        mArtistTextView = itemView.findViewById(R.id.artist_item_text_artist);
-        mSongsTextView = itemView.findViewById(R.id.artist_item_text_songs);
+        ImageView imageView = itemView.findViewById(R.id.media_item_image);
+        imageView.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_artist_dark, null));
+        mAlbumsTextView = itemView.findViewById(R.id.media_item_text_subtitle);
+        mArtistTextView = itemView.findViewById(R.id.media_item_text_title);
+        mSongsTextView = itemView.findViewById(R.id.media_item_text_details);
 
         itemView.setOnClickListener(this);
       }
@@ -197,7 +198,7 @@ public class ArtistsFragment extends Fragment {
     @Override
     public ArtistsHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
-      View itemView = mInflater.inflate(R.layout.item_artist, parent, false);
+      View itemView = mInflater.inflate(R.layout.item_media, parent, false);
       return new ArtistsHolder(itemView);
     }
 
