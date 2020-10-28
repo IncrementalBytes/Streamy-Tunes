@@ -19,6 +19,9 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.provider.MediaStore;
+
+import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
 
 public class MediaDetails implements Parcelable {
 
@@ -28,7 +31,6 @@ public class MediaDetails implements Parcelable {
   public String AlbumName;
   public long ArtistId;
   public String ArtistName;
-  public String DisplayName;
   public Uri LocalSource;
   public String Title;
   public long Track;
@@ -42,11 +44,30 @@ public class MediaDetails implements Parcelable {
     AlbumName = "";
     ArtistId = 0;
     ArtistName = "";
-    DisplayName = "";
     LocalSource = null;
     Title = "";
     Track = 0;
     Year = 0;
+  }
+
+  public MediaDetails(MediaEntity mediaEntity) {
+
+    Id = mediaEntity.Id;
+    AlbumArt = null;
+    AlbumId = mediaEntity.AlbumId;
+    AlbumName = mediaEntity.AlbumName;
+    ArtistId = mediaEntity.ArtistId;
+    ArtistName = mediaEntity.ArtistName;
+    LocalSource = null;
+    if (mediaEntity.IsExternal) {
+      LocalSource = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "" + mediaEntity.Id);
+    } else if (mediaEntity.IsInternal) {
+      LocalSource = Uri.withAppendedPath(MediaStore.Audio.Media.INTERNAL_CONTENT_URI, "" + mediaEntity.Id);
+    }
+
+    Title = mediaEntity.Title;
+    Track = mediaEntity.TrackNumber;
+    Year = mediaEntity.Year;
   }
 
   protected MediaDetails(Parcel in) {
@@ -56,7 +77,6 @@ public class MediaDetails implements Parcelable {
     AlbumName = in.readString();
     ArtistId = in.readLong();
     ArtistName = in.readString();
-    DisplayName = in.readString();
     LocalSource = in.readParcelable(Uri.class.getClassLoader());
     Title = in.readString();
     Track = in.readLong();
@@ -91,7 +111,6 @@ public class MediaDetails implements Parcelable {
     parcel.writeString(AlbumName);
     parcel.writeLong(ArtistId);
     parcel.writeString(ArtistName);
-    parcel.writeString(DisplayName);
     parcel.writeParcelable(LocalSource, i);
     parcel.writeString(Title);
     parcel.writeLong(Track);

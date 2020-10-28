@@ -16,6 +16,7 @@
 package net.whollynugatory.streamytunes.android.ui;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
@@ -56,6 +57,17 @@ public class MainActivity extends BaseActivity implements
   SummaryFragment.OnSummaryListener {
 
   private static final String TAG = BaseActivity.BASE_TAG + MainActivity.class.getSimpleName();
+
+  @Override
+  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+
+    Log.d(TAG, "++onActivityResult(int, int, Intent)");
+    if (requestCode == BaseActivity.REQUEST_SYNC) {
+      if (resultCode != RESULT_OK) {
+      }
+    }
+  }
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -135,8 +147,10 @@ public class MainActivity extends BaseActivity implements
       // TODO: disable settings and sync menu
       replaceFragment(UserSettingsFragment.newInstance());
     } else if (item.getItemId() == R.id.action_main_sync) {
-      // TODO: disable sync menu
-      replaceFragment(SummaryFragment.newInstance());
+      // TODO: hide bottom navigation
+      Intent intent = new Intent(MainActivity.this, SyncActivity.class);
+      startActivity(intent);
+      finish();
     }
 
     return super.onOptionsItemSelected(item);
@@ -220,11 +234,11 @@ public class MainActivity extends BaseActivity implements
   }
 
   /*
-      Private Methods
-     */
+    Private Methods
+  */
   private void checkForPermission() {
 
-    Log.d(TAG, "++checkForWritePermission(String, int)");
+    Log.d(TAG, "++checkForPermission(String, int)");
     if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
       if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
         String requestMessage = getString(R.string.permission_storage);
