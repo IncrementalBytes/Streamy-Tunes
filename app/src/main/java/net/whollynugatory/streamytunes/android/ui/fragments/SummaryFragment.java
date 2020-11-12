@@ -16,11 +16,7 @@
 package net.whollynugatory.streamytunes.android.ui.fragments;
 
 import android.content.Context;
-import android.content.ContextWrapper;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,16 +31,11 @@ import androidx.lifecycle.ViewModelProvider;
 import net.whollynugatory.streamytunes.android.PreferenceUtils;
 import net.whollynugatory.streamytunes.android.R;
 import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
-import net.whollynugatory.streamytunes.android.db.models.AlbumDetails;
-import net.whollynugatory.streamytunes.android.db.models.ArtistDetails;
-import net.whollynugatory.streamytunes.android.db.models.AuthorDetails;
-import net.whollynugatory.streamytunes.android.db.models.MediaDetails;
+import net.whollynugatory.streamytunes.android.db.views.AlbumDetails;
+import net.whollynugatory.streamytunes.android.db.views.ArtistDetails;
 import net.whollynugatory.streamytunes.android.db.viewmodel.MediaViewModel;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
@@ -56,12 +47,10 @@ public class SummaryFragment extends Fragment {
 
   private HashMap<Long, AlbumDetails> mAlbumMap = new HashMap<>();
   private HashMap<Long, ArtistDetails> mArtistMap = new HashMap<>();
-  private HashMap<Long, AuthorDetails> mAuthorMap = new HashMap<>();
   private boolean mIsAudiobook;
   private boolean mIsPodcast;
-  private HashMap<Long, MediaDetails> mMediaMap = new HashMap<>();
-  private HashMap<Long, MediaDetails> mPlaylistMap = new HashMap<>();
-  private String mSelection;
+  private HashMap<Long, MediaEntity> mMediaMap = new HashMap<>();
+  private HashMap<Long, MediaEntity> mPlaylistMap = new HashMap<>();
 
   private TextView mFirstValueTextView;
   private TextView mSecondValueTextView;
@@ -75,11 +64,9 @@ public class SummaryFragment extends Fragment {
 
     void onSummaryPlaylistsClicked();
 
-    void onSummaryAuthorsClicked(Collection<AuthorDetails> authorDetailsCollection);
+    void onSummaryAudiobooksClicked(Collection<MediaEntity> audiobookDetailsCollection);
 
-    void onSummaryAudiobooksClicked(Collection<MediaDetails> audiobookDetailsCollection);
-
-    void onSummaryPodcastsClicked(Collection<MediaDetails> podcastDetailsCollection);
+    void onSummaryPodcastsClicked(Collection<MediaEntity> podcastDetailsCollection);
   }
 
   private OnSummaryListener mCallback;
@@ -139,7 +126,6 @@ public class SummaryFragment extends Fragment {
     mSecondValueTextView = view.findViewById(R.id.summary_text_second_value);
     mThirdValueTextView = view.findViewById(R.id.summary_text_third_value);
 
-    mSelection = MediaStore.Audio.Media.IS_MUSIC + " == ?";
     mIsAudiobook = PreferenceUtils.getIsAudiobook(getContext());
     mIsPodcast = PreferenceUtils.getIsPodcast(getContext());
     firstTextView.setText(getString(R.string.albums));
@@ -151,15 +137,13 @@ public class SummaryFragment extends Fragment {
     secondCardView.setVisibility(View.VISIBLE);
     thirdCardView.setVisibility(View.VISIBLE);
     if (mIsAudiobook) {
-      mSelection = MediaStore.Audio.Media.IS_AUDIOBOOK + " == ?";
       firstTextView.setText(getString(R.string.authors));
-      firstCardView.setOnClickListener(v -> mCallback.onSummaryAuthorsClicked(mAuthorMap.values()));
+      firstCardView.setOnClickListener(v -> mCallback.onSummaryArtistsClicked(mArtistMap.values()));
       secondTextView.setText(getString(R.string.audiobooks));
       secondCardView.setOnClickListener(v -> mCallback.onSummaryAudiobooksClicked(mMediaMap.values()));
       secondCardView.setVisibility(View.VISIBLE);
       thirdCardView.setVisibility(View.INVISIBLE);
     } else if (mIsPodcast) {
-      mSelection = MediaStore.Audio.Media.IS_PODCAST + " == ?";
       firstTextView.setText(getString(R.string.podcasts));
       firstCardView.setOnClickListener(v -> mCallback.onSummaryPodcastsClicked(mMediaMap.values()));
       secondCardView.setVisibility(View.INVISIBLE);
@@ -217,21 +201,19 @@ public class SummaryFragment extends Fragment {
         }
       });
     } else {
-      mMediaViewModel.getAllMusic().observe(getViewLifecycleOwner(), musicEntities -> {
+      mMediaViewModel.getAllMusic().observe(getViewLifecycleOwner(), musicDetails -> {
 
-        for (MediaEntity musicEntity : musicEntities) {
-          MediaDetails mediaDetails = new MediaDetails(musicEntity);
-          mediaDetails.AlbumArt = loadImageFromStorage(musicEntity);
-          if (mAlbumMap.containsKey(musicEntity.AlbumId)) {
-            Objects.requireNonNull(mAlbumMap.get(musicEntity.AlbumId)).MediaMap.put(musicEntity.AlbumId, mediaDetails);
+        for (MediaEntity mediaEntity : musicDetails) {
+          if (mAlbumMap.containsKey(mediaEntity.AlbumId)) {
+            Objects.requireNonNull(mAlbumMap.get(mediaEntity.AlbumId)).MediaMap.put(mediaEntity.AlbumId, mediaEntity);
           } else {
-            mAlbumMap.put(musicEntity.AlbumId, mediaDetails.toAlbumDetails());
+            mAlbumMap.put(mediaEntity.AlbumId, AlbumDetails.createAlbumDetails(mediaEntity));
           }
 
-          if (mArtistMap.containsKey(musicEntity.ArtistId)) {
-            Objects.requireNonNull(mArtistMap.get(musicEntity.ArtistId)).Albums.put(musicEntity.AlbumId, mediaDetails.toAlbumDetails());
+          if (mArtistMap.containsKey(mediaEntity.ArtistId)) {
+            Objects.requireNonNull(mArtistMap.get(mediaEntity.ArtistId)).Albums.put(mediaEntity.AlbumId, AlbumDetails.createAlbumDetails(mediaEntity));
           } else {
-            mArtistMap.put(musicEntity.ArtistId, mediaDetails.toArtistDetails());
+            mArtistMap.put(mediaEntity.ArtistId, ArtistDetails.createArtistDetails(mediaEntity));
           }
         }
 
@@ -240,19 +222,5 @@ public class SummaryFragment extends Fragment {
         mThirdValueTextView.setText(String.format(getString(R.string.format_playists), 0));
       });
     }
-  }
-
-  private Bitmap loadImageFromStorage(MediaEntity mediaEntity) {
-
-    try {
-      ContextWrapper cw = new ContextWrapper(getActivity());
-      File directory = cw.getDir(getActivity().getString(R.string.album), Context.MODE_PRIVATE);
-      File sourcePath = new File(directory, mediaEntity.ArtistId + "-" + mediaEntity.AlbumId + ".jpg");
-      return BitmapFactory.decodeStream(new FileInputStream(sourcePath));
-    } catch (FileNotFoundException e) {
-      Log.e(TAG, "Failed to retrieve image.", e);
-    }
-
-    return null;
   }
 }

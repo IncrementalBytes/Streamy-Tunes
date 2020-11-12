@@ -16,12 +16,15 @@
 package net.whollynugatory.streamytunes.android.ui.fragments;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -30,8 +33,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.db.models.AlbumDetails;
-import net.whollynugatory.streamytunes.android.db.models.MediaDetails;
+import net.whollynugatory.streamytunes.android.Utils;
+import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
+import net.whollynugatory.streamytunes.android.db.views.AlbumDetails;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.ArrayList;
@@ -46,11 +50,16 @@ public class MediaFragment extends Fragment {
 
   public interface OnMediaListener {
 
-    void onMediaClicked(Collection<MediaDetails> mediaDetailsList);
+    void onMediaAddToFavorites(MediaEntity mediaEntity);
+    void onMediaAddToPlaylist(MediaEntity mediaEntity);
+    void onMediaClicked(Collection<MediaEntity> mediaEntityCollection);
+    void onMediaHideInLibrary(MediaEntity mediaEntity);
+    void onMediaRemoveFromFavorites(MediaEntity mediaEntity);
+    void onMediaShowInLibrary(MediaEntity mediaEntity);
   }
 
   private OnMediaListener mCallback;
-  private List<MediaDetails> mMediaDetailsList;
+  private List<MediaEntity> mMediaEntityList;
 
   private RecyclerView mRecyclerView;
 
@@ -66,7 +75,7 @@ public class MediaFragment extends Fragment {
 
     Log.d(TAG, "++newInstance(ArrayList<AlbumDetails>)");
     Bundle arguments = new Bundle();
-    arguments.putParcelableArrayList(BaseActivity.ARG_ALBUM_DETAILS_COLLECTION, albumDetailsList);
+    arguments.putSerializable(BaseActivity.ARG_ALBUM_DETAILS_LIST, albumDetailsList);
     MediaFragment fragment = new MediaFragment();
     fragment.setArguments(arguments);
     return fragment;
@@ -98,12 +107,12 @@ public class MediaFragment extends Fragment {
 
     Bundle arguments = getArguments();
     if (arguments != null) {
-      List<AlbumDetails> albumDetails = arguments.getParcelableArrayList(BaseActivity.ARG_ALBUM_DETAILS_COLLECTION);
-      mMediaDetailsList = new ArrayList<>();
+      List<AlbumDetails> albumDetails = (List<AlbumDetails>)arguments.getSerializable(BaseActivity.ARG_ALBUM_DETAILS_LIST);
+      mMediaEntityList = new ArrayList<>();
       if (albumDetails != null) {
         for (AlbumDetails album : albumDetails) {
-          for (Map.Entry<Long, MediaDetails> media : album.MediaMap.entrySet()) {
-            mMediaDetailsList.add(media.getValue());
+          for (Map.Entry<Long, MediaEntity> media : album.MediaMap.entrySet()) {
+            mMediaEntityList.add(media.getValue());
           }
         }
       } else {
@@ -156,7 +165,7 @@ public class MediaFragment extends Fragment {
 
     MediaAdapter mediaAdapter = new MediaAdapter(getContext());
     mRecyclerView.setAdapter(mediaAdapter);
-    mediaAdapter.setMediaDetailsList(mMediaDetailsList);
+    mediaAdapter.setMediaEntityList(mMediaEntityList);
   }
 
   /*
@@ -174,7 +183,7 @@ public class MediaFragment extends Fragment {
       private final TextView mArtistTextView;
       private final TextView mTitleTextView;
 
-      private MediaDetails mMediaDetails;
+      private MediaEntity mMediaEntity;
 
       MediaHolder(View itemView) {
         super(itemView);
@@ -185,45 +194,88 @@ public class MediaFragment extends Fragment {
         mTitleTextView = itemView.findViewById(R.id.media_item_text_title);
 
         itemView.setOnClickListener(this);
+        ImageView optionsImage = itemView.findViewById(R.id.media_item_image_options);
+        optionsImage.setOnClickListener(v -> {
+
+          PopupMenu popup = new PopupMenu(mContext, optionsImage);
+          popup.inflate(R.menu.menu_options);
+          popup.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+              case R.id.action_option_playlist:
+                Log.d(TAG, "Add to playlist" + mMediaEntity.Title);
+                mCallback.onMediaAddToPlaylist(mMediaEntity);
+                return true;
+              case R.id.action_option_favorite:
+                if (mMediaEntity.IsFavorite) {
+                  Log.d(TAG, "Remove from favorites" + mMediaEntity.Title);
+                  mMediaEntity.IsFavorite = false;
+                  mCallback.onMediaRemoveFromFavorites(mMediaEntity);
+                } else {
+                  Log.d(TAG, "Add to favorites" + mMediaEntity.Title);
+                  mMediaEntity.IsFavorite = true;
+                  mCallback.onMediaAddToFavorites(mMediaEntity);
+                }
+                return true;
+              case R.id.action_option_visible:
+                if (mMediaEntity.IsHidden) {
+                  Log.d(TAG, "Show in library" + mMediaEntity.Title);
+                  mMediaEntity.IsHidden = false;
+                  mCallback.onMediaShowInLibrary(mMediaEntity);
+                } else {
+                  Log.d(TAG, "Hide in library" + mMediaEntity.Title);
+                  mMediaEntity.IsHidden = true;
+                  mCallback.onMediaHideInLibrary(mMediaEntity);
+                }
+                return true;
+              default:
+                return false;
+            }
+          });
+
+          popup.show();
+        });
       }
 
-      void bind(MediaDetails mediaDetails) {
+      void bind(MediaEntity mediaEntity) {
 
-        mMediaDetails = mediaDetails;
-        if (mMediaDetails != null) {
-          if (mMediaDetails.AlbumArt != null) {
-            mAlbumImage.setImageBitmap(mMediaDetails.AlbumArt);
+        mMediaEntity = mediaEntity;
+        if (mMediaEntity != null) {
+          Bitmap albumArt = Utils.loadImageFromStorage(getActivity(), mMediaEntity.ArtistId, mMediaEntity.AlbumId);
+          if (albumArt != null) {
+            mAlbumImage.setImageBitmap(albumArt);
           }
 
-          mAlbumTextView.setText(mMediaDetails.AlbumName);
-          mTitleTextView.setText(mMediaDetails.Title);
-          mArtistTextView.setText(mMediaDetails.ArtistName);
+          mAlbumTextView.setText(mMediaEntity.AlbumName);
+          mTitleTextView.setText(mMediaEntity.Title);
+          mArtistTextView.setText(mMediaEntity.ArtistName);
         }
       }
 
       @Override
       public void onClick(View view) {
 
-        List<MediaDetails> mediaDetailsList = new ArrayList<>();
+        List<MediaEntity> mediaEntityList = new ArrayList<>();
         boolean addedToList = false;
-        for (MediaDetails mediaDetails : mMediaDetailsList) {
+        for (MediaEntity mediaEntity : mMediaEntityList) {
           if (addedToList) {
-            mediaDetailsList.add(mediaDetails);
-          } else if (mediaDetails.Id == mMediaDetails.Id) {
+            mediaEntityList.add(mediaEntity);
+          } else if (mediaEntity.Id == mMediaEntity.Id) {
             addedToList = true;
-            mediaDetailsList.add(mediaDetails);
+            mediaEntityList.add(mediaEntity);
           }
         }
 
-        mCallback.onMediaClicked(mediaDetailsList);
+        mCallback.onMediaClicked(mediaEntityList);
       }
     }
 
     private final LayoutInflater mInflater;
-    private List<MediaDetails> mMediaDetailsList;
+    private List<MediaEntity> mMediaEntityList;
+    private Context mContext;
 
     MediaAdapter(Context context) {
 
+      mContext = context;
       mInflater = LayoutInflater.from(context);
     }
 
@@ -238,9 +290,9 @@ public class MediaFragment extends Fragment {
     @Override
     public void onBindViewHolder(@NonNull MediaAdapter.MediaHolder holder, int position) {
 
-      if (mMediaDetailsList != null) {
-        MediaDetails mediaDetails = mMediaDetailsList.get(position);
-        holder.bind(mediaDetails);
+      if (mMediaEntityList != null) {
+        MediaEntity mediaEntity = mMediaEntityList.get(position);
+        holder.bind(mediaEntity);
       } else {
         // TODO: No songs!
       }
@@ -249,20 +301,19 @@ public class MediaFragment extends Fragment {
     @Override
     public int getItemCount() {
 
-      if (mMediaDetailsList != null) {
-        return mMediaDetailsList.size();
+      if (mMediaEntityList != null) {
+        return mMediaEntityList.size();
       } else {
         return 0;
       }
     }
 
-    void setMediaDetailsList(Collection<MediaDetails> mediaDetailsCollection) {
+    void setMediaEntityList(Collection<MediaEntity> mediaEntityCollection) {
 
-      Log.d(TAG, "++setMediaDetailsList(Collection<MediaDetails>)");
-      mMediaDetailsList = new ArrayList<>();
-      mMediaDetailsList.addAll(mediaDetailsCollection);
+      Log.d(TAG, "++setMediaEntityList(Collection<MediaEntity>)");
+      mMediaEntityList = new ArrayList<>();
+      mMediaEntityList.addAll(mediaEntityCollection);
       notifyDataSetChanged();
     }
   }
 }
-

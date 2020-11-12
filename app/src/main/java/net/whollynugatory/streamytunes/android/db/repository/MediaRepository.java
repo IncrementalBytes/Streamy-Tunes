@@ -32,7 +32,7 @@ public class MediaRepository {
 
   private static volatile MediaRepository INSTANCE;
 
-  private MediaDao mMediaDao;
+  private final MediaDao mMediaDao;
 
   private MediaRepository(MediaDao mediaDao) {
 
@@ -53,7 +53,7 @@ public class MediaRepository {
     return INSTANCE;
   }
 
-  public void delete(String mediaId) {
+  public void deleteMedia(String mediaId) {
 
     StreamyTunesDatabase.databaseWriteExecutor.execute(() -> mMediaDao.delete(mediaId));
   }
@@ -78,8 +78,13 @@ public class MediaRepository {
     return mMediaDao.getAllPodcasts();
   }
 
-  public void insert(MediaEntity mediaEntity) {
+  public void insertMedia(MediaEntity mediaEntity) {
 
     StreamyTunesDatabase.databaseWriteExecutor.execute(() -> mMediaDao.insert(mediaEntity));
+  }
+
+  public void updateMedia(MediaEntity mediaEntity) {
+
+    StreamyTunesDatabase.databaseWriteExecutor.execute(() -> mMediaDao.update(mediaEntity));
   }
 }

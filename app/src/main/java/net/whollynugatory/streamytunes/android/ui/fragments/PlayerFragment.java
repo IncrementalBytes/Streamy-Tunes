@@ -17,7 +17,9 @@ package net.whollynugatory.streamytunes.android.ui.fragments;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,7 +35,7 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.ui.PlayerView;
 
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.db.models.MediaDetails;
+import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.ArrayList;
@@ -57,7 +59,7 @@ public class PlayerFragment extends Fragment {
   private SimpleExoPlayer mPlayer;
   private PlayerView mPlayerView;
   private boolean mPlayWhenReady = true;
-  private List<MediaDetails> mMediaDetailsList;
+  private List<MediaEntity> mMediaEntityList;
 
   @SuppressLint("InlinedApi")
   private void hideSystemUi() {
@@ -69,11 +71,11 @@ public class PlayerFragment extends Fragment {
       | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
   }
 
-  public static PlayerFragment newInstance(ArrayList<MediaDetails> mediaDetailsList) {
+  public static PlayerFragment newInstance(ArrayList<MediaEntity> mediaEntityList) {
 
-    Log.d(TAG, "++newInstance(Collection<MediaDetails>)");
+    Log.d(TAG, "++newInstance(Collection<MediaEntity>)");
     Bundle arguments = new Bundle();
-    arguments.putParcelableArrayList(BaseActivity.ARG_MEDIA_DETAILS_LIST, mediaDetailsList);
+    arguments.putSerializable(BaseActivity.ARG_MEDIA_ENTITY_LIST, mediaEntityList);
     PlayerFragment fragment = new PlayerFragment();
     fragment.setArguments(arguments);
     return fragment;
@@ -93,7 +95,7 @@ public class PlayerFragment extends Fragment {
 
     Bundle arguments = getArguments();
     if (arguments != null) {
-      mMediaDetailsList = arguments.getParcelableArrayList(BaseActivity.ARG_MEDIA_DETAILS_LIST);
+      mMediaEntityList = (List<MediaEntity>)arguments.getSerializable(BaseActivity.ARG_MEDIA_ENTITY_LIST);
     } else {
       Log.e(TAG, "Arguments were null.");
     }
@@ -154,12 +156,13 @@ public class PlayerFragment extends Fragment {
     mPlayerView.setPlayer(mPlayer);
 
     boolean startAdding = false;
-    for (MediaDetails mediaDetails : mMediaDetailsList) {
+    for (MediaEntity mediaEntity : mMediaEntityList) {
+      Uri localSource = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "" + mediaEntity.Id);
       if (startAdding) {
-        mPlayer.addMediaItem(MediaItem.fromUri(mediaDetails.LocalSource));
+        mPlayer.addMediaItem(MediaItem.fromUri(localSource));
       } else {
         startAdding = true;
-        mPlayer.setMediaItem(MediaItem.fromUri(mediaDetails.LocalSource));
+        mPlayer.setMediaItem(MediaItem.fromUri(localSource));
       }
     }
 

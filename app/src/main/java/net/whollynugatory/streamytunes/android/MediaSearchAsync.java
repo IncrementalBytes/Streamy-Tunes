@@ -51,14 +51,7 @@ public class MediaSearchAsync extends AsyncTask<Void, Void, Void> {
   @Override
   protected Void doInBackground(final Void... params) {
 
-    if (PreferenceUtils.getIsExternalContent(mWeakReference.get())) {
-      getContent(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
-    }
-
-    if (PreferenceUtils.getIsInternalContent(mWeakReference.get())) {
-      getContent(MediaStore.Audio.Media.INTERNAL_CONTENT_URI);
-    }
-
+    getContent(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
     return null;
   }
 
@@ -67,7 +60,7 @@ public class MediaSearchAsync extends AsyncTask<Void, Void, Void> {
     Log.d(TAG, "++onPostExecute()");
     SyncActivity activity = mWeakReference.get();
     if (activity == null) {
-      Log.e(TAG, "DataActivity is null or detached.");
+      Log.e(TAG, "SyncActivity is null or detached.");
       return;
     }
 
@@ -84,7 +77,6 @@ public class MediaSearchAsync extends AsyncTask<Void, Void, Void> {
       MediaStore.Audio.Media.ALBUM_ID,
       MediaStore.Audio.Media.ARTIST,
       MediaStore.Audio.Media.ARTIST_ID,
-      MediaStore.Audio.Media.DISPLAY_NAME,
       MediaStore.Audio.Media.TITLE,
       MediaStore.Audio.Media.TRACK,
       MediaStore.Audio.Media.YEAR,
@@ -102,51 +94,42 @@ public class MediaSearchAsync extends AsyncTask<Void, Void, Void> {
 
       assert cursor != null;
       while (cursor.moveToNext()) {
+        MediaEntity mediaEntity = new MediaEntity();
         try {
-          MediaEntity mediaEntity = new MediaEntity();
           mediaEntity.Id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
-          mediaEntity.AlbumName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM));
           mediaEntity.AlbumId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
-          mediaEntity.ArtistName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
+          mediaEntity.AlbumName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM));
           mediaEntity.ArtistId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID));
+          mediaEntity.ArtistName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
           mediaEntity.IsAudiobook = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_AUDIOBOOK)) != 0;
           mediaEntity.IsExternal = contentSource.equals(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
-          mediaEntity.IsInternal = contentSource.equals(MediaStore.Audio.Media.INTERNAL_CONTENT_URI);
           mediaEntity.IsMusic = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_MUSIC)) != 0;
           mediaEntity.IsPodcast = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_PODCAST)) != 0;
           mediaEntity.Title = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
           mediaEntity.TrackNumber = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK));
           mediaEntity.Year = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR));
-
-          // copy album art into app storage and save path to db object
-          mediaEntity.AlbumArt = saveToInternalStorage(mediaEntity);
-          mRepository.insert(mediaEntity);
-        } catch (NullPointerException e) {
+          saveToAppStorage(mediaEntity);
+          mRepository.insertMedia(mediaEntity);
+        } catch (Exception e) {
           Log.e(TAG, "Failed to write media entity.", e);
         }
       }
     }
   }
 
-  private String saveToInternalStorage(MediaEntity mediaEntity) {
+  private void saveToAppStorage(MediaEntity mediaEntity) {
 
     ContextWrapper cw = new ContextWrapper(mWeakReference.get());
     File directory = cw.getDir(mWeakReference.get().getString(R.string.album), Context.MODE_PRIVATE);
     File destinationPath = new File(directory, mediaEntity.ArtistId + "-" + mediaEntity.AlbumId + ".jpg");
     try (FileOutputStream fos = new FileOutputStream(destinationPath)) {
-      Uri localSource = null;
-      if (mediaEntity.IsInternal) {
-        localSource = Uri.withAppendedPath(MediaStore.Audio.Media.INTERNAL_CONTENT_URI, "" + mediaEntity.Id);
-      } else if (mediaEntity.IsExternal) {
-        localSource = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "" + mediaEntity.Id);
-      }
-
-      mWeakReference.get().getContentResolver().loadThumbnail(localSource, new Size(640, 480), null)
+      Uri localSource = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "" + mediaEntity.Id);
+      mWeakReference.get().getContentResolver().loadThumbnail(
+        localSource,
+        new Size(640, 480), null)
         .compress(Bitmap.CompressFormat.PNG, 100, fos);
     } catch (Exception e) {
       Log.e(TAG, "Failed to save image", e);
     }
-
-    return destinationPath.getAbsolutePath();
   }
 }

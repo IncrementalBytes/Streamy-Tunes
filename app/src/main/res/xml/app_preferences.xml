@@ -1,16 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-  <androidx.preference.PreferenceCategory android:title="Media Locations">
-    <CheckBoxPreference
-      android:defaultValue="true"
-      android:key="@string/pref_key_is_external"
-      android:title="External Storage" />
-    <CheckBoxPreference
-      android:key="@string/pref_key_is_internal"
-      android:title="Internal Storage"/>
-  </androidx.preference.PreferenceCategory>
-
   <androidx.preference.PreferenceCategory android:title="@string/pref_category_about">
     <androidx.preference.EditTextPreference
       android:key="@string/pref_key_app_version"

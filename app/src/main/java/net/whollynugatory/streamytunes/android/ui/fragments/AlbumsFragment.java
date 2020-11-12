@@ -16,6 +16,7 @@
 package net.whollynugatory.streamytunes.android.ui.fragments;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,7 +31,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.db.models.AlbumDetails;
+import net.whollynugatory.streamytunes.android.Utils;
+import net.whollynugatory.streamytunes.android.db.views.AlbumDetails;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.ArrayList;
@@ -56,7 +58,7 @@ public class AlbumsFragment extends Fragment {
 
     Log.d(TAG, "++newInstance(ArrayList<AlbumDetails>)");
     Bundle arguments = new Bundle();
-    arguments.putParcelableArrayList(BaseActivity.ARG_ALBUM_DETAILS_COLLECTION, albumDetailsList);
+    arguments.putSerializable(BaseActivity.ARG_ALBUM_DETAILS_LIST, albumDetailsList);
     AlbumsFragment fragment = new AlbumsFragment();
     fragment.setArguments(arguments);
     return fragment;
@@ -88,7 +90,7 @@ public class AlbumsFragment extends Fragment {
 
     Bundle arguments = getArguments();
     if (arguments != null) {
-      mAlbumDetailsList = arguments.getParcelableArrayList(BaseActivity.ARG_ALBUM_DETAILS_COLLECTION);
+      mAlbumDetailsList = (List<AlbumDetails>)arguments.getSerializable(BaseActivity.ARG_ALBUM_DETAILS_LIST);
     } else {
       Log.e(TAG, "Arguments were null.");
     }
@@ -149,7 +151,7 @@ public class AlbumsFragment extends Fragment {
      */
     class AlbumHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-      private final ImageView mMediaImage;
+      private final ImageView mAlbumImage;
       private final TextView mAlbumTextView;
       private final TextView mArtistTextView;
       private final TextView mSongsTextView;
@@ -159,10 +161,12 @@ public class AlbumsFragment extends Fragment {
       AlbumHolder(View itemView) {
         super(itemView);
 
-        mMediaImage = itemView.findViewById(R.id.media_item_image);
+        mAlbumImage = itemView.findViewById(R.id.media_item_image);
         mAlbumTextView = itemView.findViewById(R.id.media_item_text_title);
         mArtistTextView = itemView.findViewById(R.id.media_item_text_subtitle);
         mSongsTextView = itemView.findViewById(R.id.media_item_text_details);
+        ImageView optionsImage = itemView.findViewById(R.id.media_item_image_options);
+        optionsImage.setVisibility(View.INVISIBLE);
 
         itemView.setOnClickListener(this);
       }
@@ -172,8 +176,9 @@ public class AlbumsFragment extends Fragment {
         mAlbumDetails = albumDetails;
 
         if (mAlbumDetails != null) {
-          if (mAlbumDetails.Art != null) {
-            mMediaImage.setImageBitmap(mAlbumDetails.Art);
+          Bitmap albumArt = Utils.loadImageFromStorage(getActivity(), mAlbumDetails.ArtistId, mAlbumDetails.Id);
+          if (albumArt != null) {
+            mAlbumImage.setImageBitmap(albumArt);
           }
 
           mAlbumTextView.setText(mAlbumDetails.Name);

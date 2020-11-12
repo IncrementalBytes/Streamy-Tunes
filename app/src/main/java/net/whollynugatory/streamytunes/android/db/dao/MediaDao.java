@@ -20,6 +20,7 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Update;
 
 import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
 
@@ -27,9 +28,6 @@ import java.util.List;
 
 @Dao
 public interface MediaDao {
-
-  @Query("SELECT COUNT(*) FROM media_table")
-  int count();
 
   @Query("DELETE FROM media_table WHERE id = :id")
   void delete(String id);
@@ -51,4 +49,7 @@ public interface MediaDao {
 
   @Insert(onConflict = OnConflictStrategy.IGNORE)
   void insertAll(List<MediaEntity> mediaEntityList);
+
+  @Update
+  void update(MediaEntity mediaEntity);
 }

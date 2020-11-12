@@ -29,17 +29,12 @@ import java.util.List;
 
 public class MediaViewModel extends AndroidViewModel {
 
-  private MediaRepository mMediaRepository;
+  private final MediaRepository mMediaRepository;
 
   public MediaViewModel(@NonNull Application application) {
     super(application);
 
     mMediaRepository = MediaRepository.getInstance(StreamyTunesDatabase.getInstance(application).mediaDao());
-  }
-
-  public void delete(String mediaId) {
-
-    mMediaRepository.delete(mediaId);
   }
 
   public LiveData<List<MediaEntity>> getAll() {
@@ -60,10 +55,5 @@ public class MediaViewModel extends AndroidViewModel {
   public LiveData<List<MediaEntity>> getAllPodcasts() {
 
     return mMediaRepository.getAllPodcasts();
-  }
-
-  public void insert(MediaEntity mediaEntity) {
-
-    mMediaRepository.insert(mediaEntity);
   }
 }

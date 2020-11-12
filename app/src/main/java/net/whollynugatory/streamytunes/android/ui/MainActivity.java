@@ -35,10 +35,12 @@ import com.google.android.material.snackbar.Snackbar;
 
 import net.whollynugatory.streamytunes.android.PreferenceUtils;
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.db.models.AlbumDetails;
-import net.whollynugatory.streamytunes.android.db.models.ArtistDetails;
-import net.whollynugatory.streamytunes.android.db.models.AuthorDetails;
-import net.whollynugatory.streamytunes.android.db.models.MediaDetails;
+import net.whollynugatory.streamytunes.android.UpdateRowAsync;
+import net.whollynugatory.streamytunes.android.db.StreamyTunesDatabase;
+import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
+import net.whollynugatory.streamytunes.android.db.repository.MediaRepository;
+import net.whollynugatory.streamytunes.android.db.views.AlbumDetails;
+import net.whollynugatory.streamytunes.android.db.views.ArtistDetails;
 import net.whollynugatory.streamytunes.android.ui.fragments.AlbumsFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.ArtistsFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.PlayerFragment;
@@ -189,10 +191,45 @@ public class MainActivity extends BaseActivity implements
   }
 
   @Override
-  public void onMediaClicked(Collection<MediaDetails> songDetailsCollection) {
+  public void onMediaAddToFavorites(MediaEntity mediaEntity) {
 
-    Log.d(TAG, "++onSongClicked(List<SongDetails>)");
-    replaceFragment(PlayerFragment.newInstance(new ArrayList<>(songDetailsCollection)));
+    Log.d(TAG, "++onMediaAddToFavorites(MediaEntity)");
+    new UpdateRowAsync(this, MediaRepository.getInstance(StreamyTunesDatabase.getInstance(this).mediaDao()), mediaEntity).execute();
+  }
+
+  @Override
+  public void onMediaAddToPlaylist(MediaEntity mediaEntity) {
+
+    Log.d(TAG, "++onMediaAddToPlaylist(MediaEntity)");
+    // TODO: implement playlists
+  }
+
+  @Override
+  public void onMediaHideInLibrary(MediaEntity mediaEntity) {
+
+    Log.d(TAG, "++onMediaHideInLibrary(MediaEntity)");
+    new UpdateRowAsync(this, MediaRepository.getInstance(StreamyTunesDatabase.getInstance(this).mediaDao()), mediaEntity).execute();
+  }
+
+  @Override
+  public void onMediaClicked(Collection<MediaEntity> mediaEntityCollection) {
+
+    Log.d(TAG, "++onSongClicked(List<MediaEntity>)");
+    replaceFragment(PlayerFragment.newInstance(new ArrayList<>(mediaEntityCollection)));
+  }
+
+  @Override
+  public void onMediaRemoveFromFavorites(MediaEntity mediaEntity) {
+
+    Log.d(TAG, "++onMediaRemoveFromFavorites(MediaEntity)");
+    new UpdateRowAsync(this, MediaRepository.getInstance(StreamyTunesDatabase.getInstance(this).mediaDao()), mediaEntity).execute();
+  }
+
+  @Override
+  public void onMediaShowInLibrary(MediaEntity mediaEntity) {
+
+    Log.d(TAG, "++onMediaShowInLibrary(MediaEntity)");
+    new UpdateRowAsync(this, MediaRepository.getInstance(StreamyTunesDatabase.getInstance(this).mediaDao()), mediaEntity).execute();
   }
 
   @Override
@@ -210,15 +247,9 @@ public class MainActivity extends BaseActivity implements
   }
 
   @Override
-  public void onSummaryAudiobooksClicked(Collection<MediaDetails> audiobookDetailsCollection) {
+  public void onSummaryAudiobooksClicked(Collection<MediaEntity> audiobookDetailsCollection) {
 
-    Log.d(TAG, "++onSummaryPlaylistsClicked(onSummaryAudiobooksClicked(Collection<MediaDetails>)");
-  }
-
-  @Override
-  public void onSummaryAuthorsClicked(Collection<AuthorDetails> authorDetailsCollection) {
-
-    Log.d(TAG, "++onSummaryAuthorsClicked(Collection<AuthorDetails>)");
+    Log.d(TAG, "++onSummaryPlaylistsClicked(onSummaryAudiobooksClicked(Collection<MediaEntity>)");
   }
 
   @Override
@@ -228,9 +259,17 @@ public class MainActivity extends BaseActivity implements
   }
 
   @Override
-  public void onSummaryPodcastsClicked(Collection<MediaDetails> podcastDetailsCollection) {
+  public void onSummaryPodcastsClicked(Collection<MediaEntity> podcastDetailsCollection) {
 
-    Log.d(TAG, "++onSummaryPodcastsClicked(Collection<MediaDetails>)");
+    Log.d(TAG, "++onSummaryPodcastsClicked(Collection<MediaEntity>)");
+  }
+
+  /*
+    Async Callback(s)
+   */
+  public void mediaEntityUpdated() {
+
+    Log.d(TAG, "++mediaEntityUpdated()");
   }
 
   /*

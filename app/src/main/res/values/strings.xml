@@ -47,8 +47,6 @@
   <string name="pref_key_is_music">key_is_music</string>
   <string name="pref_key_is_audiobook">key_is_audiobook</string>
   <string name="pref_key_is_podcast">key_is_podcast</string>
-  <string name="pref_key_is_external">key_is_external</string>
-  <string name="pref_key_is_internal">key_is_internal</string>
   <string name="music">Music</string>
   <string name="authors">Authors</string>
   <string name="audiobooks">Audiobooks</string>
@@ -58,4 +56,10 @@
   <string name="format_songs">Number of songs: %d</string>
   <string name="fragment_albums">Albums</string>
   <string name="sync_search">Searching and updating media library…</string>
+  <string name="desc_options">Do something with this media</string>
+  <string name="add_to_playlist">Add to playlist</string>
+  <string name="favorite">Add to Favorites</string>
+  <string name="unfavorite">Remove from Favorites</string>
+  <string name="show">Show in library</string>
+  <string name="hide">Hide from library</string>
 </resources>

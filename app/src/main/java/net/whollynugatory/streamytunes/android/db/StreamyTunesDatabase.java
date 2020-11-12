@@ -26,6 +26,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import net.whollynugatory.streamytunes.android.db.dao.MediaDao;
 import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
+import net.whollynugatory.streamytunes.android.db.views.AlbumDetails;
+import net.whollynugatory.streamytunes.android.db.views.ArtistDetails;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.concurrent.ExecutorService;
@@ -33,6 +35,7 @@ import java.util.concurrent.Executors;
 
 @Database(
   entities = {MediaEntity.class},
+  views = {AlbumDetails.class, ArtistDetails.class},
   version = 1,
   exportSchema = false)
 public abstract class StreamyTunesDatabase extends RoomDatabase {

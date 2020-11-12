@@ -44,7 +44,6 @@ public class SyncActivity extends BaseActivity {
     Log.d(TAG, "++onDestroy()");
   }
 
-
   /*
     Public Method(s)
    */

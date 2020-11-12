@@ -28,9 +28,6 @@ public class MediaEntity implements Serializable {
   @ColumnInfo(name = "id")
   public long Id;
 
-  @ColumnInfo(name = "album_art")
-  public String AlbumArt;
-
   @ColumnInfo(name = "album_id")
   public long AlbumId;
 
@@ -43,20 +40,8 @@ public class MediaEntity implements Serializable {
   @ColumnInfo(name = "artist_name")
   public String ArtistName;
 
-  @ColumnInfo(name = "favorite")
-  public boolean Favorite;
-
-  @ColumnInfo(name = "hide")
-  public boolean Hide;
-
   @ColumnInfo(name = "is_audiobook")
   public boolean IsAudiobook;
-
-  @ColumnInfo(name = "is_external")
-  public boolean IsExternal;
-
-  @ColumnInfo(name = "is_internal")
-  public boolean IsInternal;
 
   @ColumnInfo(name = "is_music")
   public boolean IsMusic;
@@ -64,8 +49,14 @@ public class MediaEntity implements Serializable {
   @ColumnInfo(name = "is_podcast")
   public boolean IsPodcast;
 
-  @ColumnInfo(name = "name")
-  public String Name;
+  @ColumnInfo(name = "is_favorite")
+  public boolean IsFavorite;
+
+  @ColumnInfo(name = "is_hidden")
+  public boolean IsHidden;
+
+  @ColumnInfo(name = "is_external")
+  public boolean IsExternal;
 
   @ColumnInfo(name = "title")
   public String Title;
@@ -79,20 +70,17 @@ public class MediaEntity implements Serializable {
   public MediaEntity() {
 
     Id = -1;
-    AlbumArt = null;
     AlbumId = -1;
-    AlbumName = "";
+    AlbumName = "UNKNOWN";
     ArtistId = -1;
-    ArtistName = "";
-    Favorite = false;
-    Hide = false;
+    ArtistName = "UNKNOWN";
     IsAudiobook = false;
-    IsExternal = false;
-    IsInternal = false;
     IsMusic = false;
     IsPodcast = false;
-    Name = "";
-    Title = "";
+    IsFavorite = false;
+    IsHidden = false;
+    IsExternal = false;
+    Title = "UNKNOWN";
     TrackNumber = -1;
     Year = -1;
   }

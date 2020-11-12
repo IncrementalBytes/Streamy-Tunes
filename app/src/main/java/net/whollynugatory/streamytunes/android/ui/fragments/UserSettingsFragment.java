@@ -20,18 +20,16 @@ import android.os.Bundle;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.preference.CheckBoxPreference;
 import androidx.preference.EditTextPreference;
 import androidx.preference.PreferenceFragmentCompat;
 
 import net.whollynugatory.streamytunes.android.BuildConfig;
-import net.whollynugatory.streamytunes.android.PreferenceUtils;
 import net.whollynugatory.streamytunes.android.R;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 public class UserSettingsFragment extends PreferenceFragmentCompat {
 
-  private static final String TAG = BaseActivity.BASE_TAG + "UserSettingsFragment";
+  private static final String TAG = BaseActivity.BASE_TAG + UserSettingsFragment.class.getSimpleName();
 
   public static UserSettingsFragment newInstance() {
 
@@ -54,7 +52,6 @@ public class UserSettingsFragment extends PreferenceFragmentCompat {
 
     Log.d(TAG, "++onCreatePreferences(Bundle, String)");
     addPreferencesFromResource(R.xml.app_preferences);
-    setupContentPreferences();
     setupAppVersionPreference();
   }
 
@@ -67,34 +64,6 @@ public class UserSettingsFragment extends PreferenceFragmentCompat {
     EditTextPreference editTextPreference = findPreference(getString(R.string.pref_key_app_version));
     if (editTextPreference != null) {
       editTextPreference.setSummary(BuildConfig.VERSION_NAME);
-    }
-  }
-
-  private void setupContentPreferences() {
-
-    Log.d(TAG, "++setupContentPreferences()");
-    CheckBoxPreference externalCheckBoxPreference = findPreference(getString(R.string.pref_key_is_external));
-    if (externalCheckBoxPreference != null) {
-      externalCheckBoxPreference.setOnPreferenceChangeListener((preference, newValue) -> {
-
-        PreferenceUtils.saveBooleanPreference(
-          getActivity(),
-          R.string.pref_key_is_external,
-          (boolean) newValue);
-        return true;
-      });
-    }
-
-    CheckBoxPreference internalCheckBoxPreference = findPreference(getString(R.string.pref_key_is_internal));
-    if (internalCheckBoxPreference != null) {
-      internalCheckBoxPreference.setOnPreferenceChangeListener((preference, newValue) -> {
-
-        PreferenceUtils.saveBooleanPreference(
-          getActivity(),
-          R.string.pref_key_is_internal,
-          (boolean) newValue);
-        return true;
-      });
     }
   }
 }

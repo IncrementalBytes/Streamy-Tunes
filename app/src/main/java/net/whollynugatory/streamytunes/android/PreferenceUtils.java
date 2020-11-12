@@ -23,16 +23,6 @@ import androidx.preference.PreferenceManager;
 
 public class PreferenceUtils {
 
-  public static boolean getIsExternalContent(Context context) {
-
-    return getBooleanPref(context, R.string.pref_key_is_external);
-  }
-
-  public static boolean getIsInternalContent(Context context) {
-
-    return getBooleanPref(context, R.string.pref_key_is_internal);
-  }
-
   public static boolean getIsAudiobook(Context context) {
 
     return getBooleanPref(context, R.string.pref_key_is_audiobook);

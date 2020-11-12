@@ -31,7 +31,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.db.models.ArtistDetails;
+import net.whollynugatory.streamytunes.android.db.views.ArtistDetails;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.ArrayList;
@@ -57,7 +57,7 @@ public class ArtistsFragment extends Fragment {
 
     Log.d(TAG, "++newInstance(ArrayList<ArtistDetails>)");
     Bundle arguments = new Bundle();
-    arguments.putParcelableArrayList(BaseActivity.ARG_ARTIST_DETAILS_COLLECTION, artistDetailsList);
+    arguments.putSerializable(BaseActivity.ARG_ARTIST_DETAILS_LIST, artistDetailsList);
     ArtistsFragment fragment = new ArtistsFragment();
     fragment.setArguments(arguments);
     return fragment;
@@ -89,7 +89,7 @@ public class ArtistsFragment extends Fragment {
 
     Bundle arguments = getArguments();
     if (arguments != null) {
-      mArtistDetailsList = arguments.getParcelableArrayList(BaseActivity.ARG_ARTIST_DETAILS_COLLECTION);
+      mArtistDetailsList = (List<ArtistDetails>)arguments.getSerializable(BaseActivity.ARG_ARTIST_DETAILS_LIST);
     } else {
       Log.e(TAG, "Arguments were null.");
     }
@@ -164,6 +164,8 @@ public class ArtistsFragment extends Fragment {
         mAlbumsTextView = itemView.findViewById(R.id.media_item_text_subtitle);
         mArtistTextView = itemView.findViewById(R.id.media_item_text_title);
         mSongsTextView = itemView.findViewById(R.id.media_item_text_details);
+        ImageView optionsImage = itemView.findViewById(R.id.media_item_image_options);
+        optionsImage.setVisibility(View.INVISIBLE);
 
         itemView.setOnClickListener(this);
       }
