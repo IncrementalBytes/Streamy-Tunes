@@ -33,18 +33,20 @@ import android.view.MenuItem;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
+import net.whollynugatory.streamytunes.android.PlaylistAsync;
 import net.whollynugatory.streamytunes.android.PreferenceUtils;
 import net.whollynugatory.streamytunes.android.R;
 import net.whollynugatory.streamytunes.android.UpdateRowAsync;
+import net.whollynugatory.streamytunes.android.db.MediaDetails;
 import net.whollynugatory.streamytunes.android.db.StreamyTunesDatabase;
 import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
+import net.whollynugatory.streamytunes.android.db.entity.PlaylistEntity;
 import net.whollynugatory.streamytunes.android.db.repository.MediaRepository;
-import net.whollynugatory.streamytunes.android.db.views.AlbumDetails;
-import net.whollynugatory.streamytunes.android.db.views.ArtistDetails;
 import net.whollynugatory.streamytunes.android.ui.fragments.AlbumsFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.ArtistsFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.PlayerFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.MediaFragment;
+import net.whollynugatory.streamytunes.android.ui.fragments.PlaylistFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.SummaryFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.UserSettingsFragment;
 
@@ -54,8 +56,9 @@ import java.util.Collection;
 public class MainActivity extends BaseActivity implements
   AlbumsFragment.OnAlbumListener,
   ArtistsFragment.OnArtistListener,
-  PlayerFragment.OnPlayerListener,
   MediaFragment.OnMediaListener,
+  PlayerFragment.OnPlayerListener,
+  PlaylistFragment.OnPlaylistListener,
   SummaryFragment.OnSummaryListener {
 
   private static final String TAG = BaseActivity.BASE_TAG + MainActivity.class.getSimpleName();
@@ -85,11 +88,7 @@ public class MainActivity extends BaseActivity implements
       Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.main_fragment_container);
       if (fragment != null) {
         String fragmentClassName = fragment.getClass().getName();
-        if (fragmentClassName.equals(AlbumsFragment.class.getName())) {
-          setTitle(getString(R.string.albums));
-        } else if (fragmentClassName.equals(ArtistsFragment.class.getName())) {
-          setTitle(getString(R.string.artists));
-        } else if (fragmentClassName.equals(UserSettingsFragment.class.getName())) {
+        if (fragmentClassName.equals(UserSettingsFragment.class.getName())) {
           setTitle(getString(R.string.settings));
         } else {
           setTitle(getString(R.string.app_name));
@@ -106,12 +105,14 @@ public class MainActivity extends BaseActivity implements
           replaceFragment(SummaryFragment.newInstance());
           return true;
         case R.id.navigation_audiobook:
-          PreferenceUtils.setIsAudiobook(this);
-          replaceFragment(SummaryFragment.newInstance());
-          return true;
+//          PreferenceUtils.setIsAudiobook(this);
+//          return true;
         case R.id.navigation_podcast:
-          PreferenceUtils.setIsPodcast(this);
-          replaceFragment(SummaryFragment.newInstance());
+//          PreferenceUtils.setIsPodcast(this);
+          Snackbar.make(
+            findViewById(R.id.main_fragment_container),
+            getString(R.string.not_yet_implemented),
+            Snackbar.LENGTH_LONG).show();
           return true;
       }
 
@@ -171,17 +172,57 @@ public class MainActivity extends BaseActivity implements
     Fragment Callback(s)
    */
   @Override
-  public void onAlbumClicked(AlbumDetails albumDetails) {
+  public void onAlbumClicked(long albumId) {
 
-    Log.d(TAG, "++onAlbumClicked(AlbumDetails)");
-    replaceFragment(MediaFragment.newInstance(albumDetails));
+    Log.d(TAG, "++onAlbumClicked(long)");
+    replaceFragment(MediaFragment.newInstanceByAlbum(albumId));
   }
 
   @Override
-  public void onArtistClicked(ArtistDetails artistDetails) {
+  public void onArtistClicked(long artistId) {
 
-    Log.d(TAG, "++onArtistClicked(ArtistDetails)");
-    replaceFragment(MediaFragment.newInstance(new ArrayList<>(artistDetails.Albums.values())));
+    Log.d(TAG, "++onArtistClicked(long)");
+    replaceFragment(MediaFragment.newInstanceByArtist(artistId));
+  }
+
+  @Override
+  public void onMediaAddToPlaylist(MediaEntity mediaEntity) {
+
+    Log.d(TAG, "++onMediaAddToPlaylist(MediaEntity)");
+    Snackbar.make(
+      findViewById(R.id.main_fragment_container),
+      getString(R.string.not_yet_implemented),
+      Snackbar.LENGTH_LONG).show();
+  }
+
+  @Override
+  public void onMediaClicked(Collection<MediaDetails> mediaDetailsCollection) {
+
+    Log.d(TAG, "++onMediaClicked(Collection<MediaDetails>)");
+    replaceFragment(PlayerFragment.newInstance(new ArrayList<>(mediaDetailsCollection)));
+  }
+
+  @Override
+  public void onMediaUpdateFavorites(MediaEntity mediaEntity) {
+
+    Log.d(TAG, "++onMediaUpdateFavorites(MediaEntity)");
+    PlaylistEntity playlistEntity = new PlaylistEntity();
+    playlistEntity.PlaylistId = BaseActivity.DEFAULT_PLAYLIST_FAVORITES_ID;
+    playlistEntity.MediaId = mediaEntity.MediaId;
+    playlistEntity.PlaylistName = BaseActivity.DEFAULT_PLAYLIST_FAVORITES;
+    new PlaylistAsync(
+      this,
+      MediaRepository.getInstance(StreamyTunesDatabase.getInstance(this).mediaDao()),
+      playlistEntity,
+      mediaEntity.IsFavorite).execute();
+    updateRowAsync(mediaEntity);
+  }
+
+  @Override
+  public void onMediaUpdateVisible(MediaEntity mediaEntity) {
+
+    Log.d(TAG, "++onMediaUpdateVisible(MediaEntity)");
+    updateRowAsync(mediaEntity);
   }
 
   @Override
@@ -191,85 +232,56 @@ public class MainActivity extends BaseActivity implements
   }
 
   @Override
-  public void onMediaAddToFavorites(MediaEntity mediaEntity) {
+  public void onPlaylistClicked(String playlistId) {
 
-    Log.d(TAG, "++onMediaAddToFavorites(MediaEntity)");
-    new UpdateRowAsync(this, MediaRepository.getInstance(StreamyTunesDatabase.getInstance(this).mediaDao()), mediaEntity).execute();
+    Log.d(TAG, "++onPlaylistClicked(String)");
+    replaceFragment(MediaFragment.newInstanceByPlaylist(playlistId));
   }
 
   @Override
-  public void onMediaAddToPlaylist(MediaEntity mediaEntity) {
+  public void onSummaryAlbumsClicked() {
 
-    Log.d(TAG, "++onMediaAddToPlaylist(MediaEntity)");
-    // TODO: implement playlists
+    Log.d(TAG, "++onSummaryAlbumsClicked()");
+    replaceFragment(AlbumsFragment.newInstance());
   }
 
   @Override
-  public void onMediaHideInLibrary(MediaEntity mediaEntity) {
+  public void onSummaryArtistsClicked() {
 
-    Log.d(TAG, "++onMediaHideInLibrary(MediaEntity)");
-    new UpdateRowAsync(this, MediaRepository.getInstance(StreamyTunesDatabase.getInstance(this).mediaDao()), mediaEntity).execute();
-  }
-
-  @Override
-  public void onMediaClicked(Collection<MediaEntity> mediaEntityCollection) {
-
-    Log.d(TAG, "++onSongClicked(List<MediaEntity>)");
-    replaceFragment(PlayerFragment.newInstance(new ArrayList<>(mediaEntityCollection)));
-  }
-
-  @Override
-  public void onMediaRemoveFromFavorites(MediaEntity mediaEntity) {
-
-    Log.d(TAG, "++onMediaRemoveFromFavorites(MediaEntity)");
-    new UpdateRowAsync(this, MediaRepository.getInstance(StreamyTunesDatabase.getInstance(this).mediaDao()), mediaEntity).execute();
-  }
-
-  @Override
-  public void onMediaShowInLibrary(MediaEntity mediaEntity) {
-
-    Log.d(TAG, "++onMediaShowInLibrary(MediaEntity)");
-    new UpdateRowAsync(this, MediaRepository.getInstance(StreamyTunesDatabase.getInstance(this).mediaDao()), mediaEntity).execute();
-  }
-
-  @Override
-  public void onSummaryAlbumsClicked(Collection<AlbumDetails> albumDetailsList) {
-
-    Log.d(TAG, "++onSummaryAlbumsClicked(Collection<AlbumDetails>)");
-    replaceFragment(AlbumsFragment.newInstance(new ArrayList<>(albumDetailsList)));
-  }
-
-  @Override
-  public void onSummaryArtistsClicked(Collection<ArtistDetails> artistDetailsList) {
-
-    Log.d(TAG, "++onSummaryArtistsClicked(Collection<ArtistDetails>)");
-    replaceFragment(ArtistsFragment.newInstance(new ArrayList<>(artistDetailsList)));
-  }
-
-  @Override
-  public void onSummaryAudiobooksClicked(Collection<MediaEntity> audiobookDetailsCollection) {
-
-    Log.d(TAG, "++onSummaryPlaylistsClicked(onSummaryAudiobooksClicked(Collection<MediaEntity>)");
+    Log.d(TAG, "++onSummaryArtistsClicked()");
+    replaceFragment(ArtistsFragment.newInstance());
   }
 
   @Override
   public void onSummaryPlaylistsClicked() {
 
     Log.d(TAG, "++onSummaryPlaylistsClicked()");
+    replaceFragment(PlaylistFragment.newInstance());
   }
 
   @Override
-  public void onSummaryPodcastsClicked(Collection<MediaEntity> podcastDetailsCollection) {
+  public void onSummaryAudiobooksClicked() {
 
-    Log.d(TAG, "++onSummaryPodcastsClicked(Collection<MediaEntity>)");
+    Log.d(TAG, "++onSummaryAudiobooksClicked()");
+  }
+
+  @Override
+  public void onSummaryPodcastsClicked() {
+
+    Log.d(TAG, "++onSummaryPodcastsClicked()");
   }
 
   /*
-    Async Callback(s)
-   */
+      Async Callback(s)
+     */
   public void mediaEntityUpdated() {
 
     Log.d(TAG, "++mediaEntityUpdated()");
+  }
+
+  public void playlistUpdated() {
+
+    Log.d(TAG, "++playlistUpdated()");
   }
 
   /*
@@ -309,5 +321,13 @@ public class MainActivity extends BaseActivity implements
       .replace(R.id.main_fragment_container, fragment)
       .addToBackStack(null)
       .commit();
+  }
+
+  private void updateRowAsync(MediaEntity mediaEntity) {
+
+    Log.d(TAG, "++updateRowAsync(MediaEntity)");
+    new UpdateRowAsync(
+      this,
+      MediaRepository.getInstance(StreamyTunesDatabase.getInstance(this).mediaDao()), mediaEntity).execute();
   }
 }

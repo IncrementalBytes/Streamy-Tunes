@@ -35,7 +35,7 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.ui.PlayerView;
 
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
+import net.whollynugatory.streamytunes.android.db.MediaDetails;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.ArrayList;
@@ -59,7 +59,7 @@ public class PlayerFragment extends Fragment {
   private SimpleExoPlayer mPlayer;
   private PlayerView mPlayerView;
   private boolean mPlayWhenReady = true;
-  private List<MediaEntity> mMediaEntityList;
+  private List<MediaDetails> mMediaDetailsList;
 
   @SuppressLint("InlinedApi")
   private void hideSystemUi() {
@@ -71,11 +71,11 @@ public class PlayerFragment extends Fragment {
       | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
   }
 
-  public static PlayerFragment newInstance(ArrayList<MediaEntity> mediaEntityList) {
+  public static PlayerFragment newInstance(ArrayList<MediaDetails> mediaDetailsArrayList) {
 
-    Log.d(TAG, "++newInstance(Collection<MediaEntity>)");
+    Log.d(TAG, "++newInstance(ArrayList<MediaEntity>)");
     Bundle arguments = new Bundle();
-    arguments.putSerializable(BaseActivity.ARG_MEDIA_ENTITY_LIST, mediaEntityList);
+    arguments.putSerializable(BaseActivity.ARG_MEDIA_ENTITY_LIST, mediaDetailsArrayList);
     PlayerFragment fragment = new PlayerFragment();
     fragment.setArguments(arguments);
     return fragment;
@@ -95,7 +95,7 @@ public class PlayerFragment extends Fragment {
 
     Bundle arguments = getArguments();
     if (arguments != null) {
-      mMediaEntityList = (List<MediaEntity>)arguments.getSerializable(BaseActivity.ARG_MEDIA_ENTITY_LIST);
+      mMediaDetailsList = (List<MediaDetails>)arguments.getSerializable(BaseActivity.ARG_MEDIA_ENTITY_LIST);
     } else {
       Log.e(TAG, "Arguments were null.");
     }
@@ -156,8 +156,8 @@ public class PlayerFragment extends Fragment {
     mPlayerView.setPlayer(mPlayer);
 
     boolean startAdding = false;
-    for (MediaEntity mediaEntity : mMediaEntityList) {
-      Uri localSource = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "" + mediaEntity.Id);
+    for (MediaDetails mediaDetails : mMediaDetailsList) {
+      Uri localSource = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "" + mediaDetails.MediaId);
       if (startAdding) {
         mPlayer.addMediaItem(MediaItem.fromUri(localSource));
       } else {

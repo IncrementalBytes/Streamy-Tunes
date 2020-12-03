@@ -18,33 +18,39 @@ package net.whollynugatory.streamytunes.android;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
+import net.whollynugatory.streamytunes.android.db.entity.PlaylistEntity;
 import net.whollynugatory.streamytunes.android.db.repository.MediaRepository;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 import net.whollynugatory.streamytunes.android.ui.MainActivity;
 
 import java.lang.ref.WeakReference;
 
-public class UpdateRowAsync extends AsyncTask<Void, Void, Void> {
+public class PlaylistAsync extends AsyncTask<Void, Void, Void> {
 
-  private static final String TAG = BaseActivity.BASE_TAG + UpdateRowAsync.class.getSimpleName();
+  private static final String TAG = BaseActivity.BASE_TAG + PlaylistAsync.class.getSimpleName();
 
+  private final boolean mAddToPlaylist;
+  private final PlaylistEntity mPlaylistEntity;
+  private final MediaRepository mRepository;
   private final WeakReference<MainActivity> mWeakReference;
 
-  private final MediaRepository mRepository;
-  private final MediaEntity mMediaEntity;
+  public PlaylistAsync(MainActivity context, MediaRepository repository, PlaylistEntity playlistEntity, boolean addToPlaylist) {
 
-  public UpdateRowAsync(MainActivity context, MediaRepository repository, MediaEntity mediaEntity) {
-
-    mWeakReference = new WeakReference<>(context);
+    mAddToPlaylist = addToPlaylist;
+    mPlaylistEntity = playlistEntity;
     mRepository = repository;
-    mMediaEntity = mediaEntity;
+    mWeakReference = new WeakReference<>(context);
   }
 
   @Override
   protected Void doInBackground(final Void... params) {
 
-    mRepository.updateMedia(mMediaEntity);
+    if (mAddToPlaylist) {
+      mRepository.insertPlaylist(mPlaylistEntity);
+    } else {
+      mRepository.deletePlaylist(mPlaylistEntity);
+    }
+
     return null;
   }
 
@@ -57,6 +63,6 @@ public class UpdateRowAsync extends AsyncTask<Void, Void, Void> {
       return;
     }
 
-    activity.mediaEntityUpdated();
+    activity.playlistUpdated();
   }
 }

@@ -30,27 +30,17 @@ import androidx.lifecycle.ViewModelProvider;
 
 import net.whollynugatory.streamytunes.android.PreferenceUtils;
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
-import net.whollynugatory.streamytunes.android.db.views.AlbumDetails;
-import net.whollynugatory.streamytunes.android.db.views.ArtistDetails;
 import net.whollynugatory.streamytunes.android.db.viewmodel.MediaViewModel;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Objects;
 
 public class SummaryFragment extends Fragment {
 
   private static final String TAG = BaseActivity.BASE_TAG + SummaryFragment.class.getSimpleName();
 
-  private HashMap<Long, AlbumDetails> mAlbumMap = new HashMap<>();
-  private HashMap<Long, ArtistDetails> mArtistMap = new HashMap<>();
   private boolean mIsAudiobook;
   private boolean mIsPodcast;
-  private HashMap<Long, MediaEntity> mMediaMap = new HashMap<>();
-  private HashMap<Long, MediaEntity> mPlaylistMap = new HashMap<>();
 
   private TextView mFirstValueTextView;
   private TextView mSecondValueTextView;
@@ -58,15 +48,15 @@ public class SummaryFragment extends Fragment {
 
   public interface OnSummaryListener {
 
-    void onSummaryAlbumsClicked(Collection<AlbumDetails> albumDetailsCollection);
+    void onSummaryAlbumsClicked();
 
-    void onSummaryArtistsClicked(Collection<ArtistDetails> artistDetailsCollection);
+    void onSummaryArtistsClicked();
 
     void onSummaryPlaylistsClicked();
 
-    void onSummaryAudiobooksClicked(Collection<MediaEntity> audiobookDetailsCollection);
+    void onSummaryAudiobooksClicked();
 
-    void onSummaryPodcastsClicked(Collection<MediaEntity> podcastDetailsCollection);
+    void onSummaryPodcastsClicked();
   }
 
   private OnSummaryListener mCallback;
@@ -129,23 +119,23 @@ public class SummaryFragment extends Fragment {
     mIsAudiobook = PreferenceUtils.getIsAudiobook(getContext());
     mIsPodcast = PreferenceUtils.getIsPodcast(getContext());
     firstTextView.setText(getString(R.string.albums));
-    firstCardView.setOnClickListener(v -> mCallback.onSummaryAlbumsClicked(mAlbumMap.values()));
+    firstCardView.setOnClickListener(v -> mCallback.onSummaryAlbumsClicked());
     secondTextView.setText(getString(R.string.artists));
-    secondCardView.setOnClickListener(v -> mCallback.onSummaryArtistsClicked(mArtistMap.values()));
+    secondCardView.setOnClickListener(v -> mCallback.onSummaryArtistsClicked());
     thirdTextView.setText(getString(R.string.playlists));
     thirdCardView.setOnClickListener(v -> mCallback.onSummaryPlaylistsClicked());
     secondCardView.setVisibility(View.VISIBLE);
     thirdCardView.setVisibility(View.VISIBLE);
     if (mIsAudiobook) {
       firstTextView.setText(getString(R.string.authors));
-      firstCardView.setOnClickListener(v -> mCallback.onSummaryArtistsClicked(mArtistMap.values()));
+      firstCardView.setOnClickListener(v -> mCallback.onSummaryArtistsClicked());
       secondTextView.setText(getString(R.string.audiobooks));
-      secondCardView.setOnClickListener(v -> mCallback.onSummaryAudiobooksClicked(mMediaMap.values()));
+      secondCardView.setOnClickListener(v -> mCallback.onSummaryAudiobooksClicked());
       secondCardView.setVisibility(View.VISIBLE);
       thirdCardView.setVisibility(View.INVISIBLE);
     } else if (mIsPodcast) {
       firstTextView.setText(getString(R.string.podcasts));
-      firstCardView.setOnClickListener(v -> mCallback.onSummaryPodcastsClicked(mMediaMap.values()));
+      firstCardView.setOnClickListener(v -> mCallback.onSummaryPodcastsClicked());
       secondCardView.setVisibility(View.INVISIBLE);
       thirdCardView.setVisibility(View.INVISIBLE);
     }
@@ -201,25 +191,14 @@ public class SummaryFragment extends Fragment {
         }
       });
     } else {
-      mMediaViewModel.getAllMusic().observe(getViewLifecycleOwner(), musicDetails -> {
+      mMediaViewModel.getAllAlbums().observe(getViewLifecycleOwner(), albumViews -> {
 
-        for (MediaEntity mediaEntity : musicDetails) {
-          if (mAlbumMap.containsKey(mediaEntity.AlbumId)) {
-            Objects.requireNonNull(mAlbumMap.get(mediaEntity.AlbumId)).MediaMap.put(mediaEntity.AlbumId, mediaEntity);
-          } else {
-            mAlbumMap.put(mediaEntity.AlbumId, AlbumDetails.createAlbumDetails(mediaEntity));
-          }
+        mFirstValueTextView.setText(String.format(getString(R.string.format_albums), albumViews.size()));
+        mMediaViewModel.getAllArtists().observe(getViewLifecycleOwner(), artistViews -> {
 
-          if (mArtistMap.containsKey(mediaEntity.ArtistId)) {
-            Objects.requireNonNull(mArtistMap.get(mediaEntity.ArtistId)).Albums.put(mediaEntity.AlbumId, AlbumDetails.createAlbumDetails(mediaEntity));
-          } else {
-            mArtistMap.put(mediaEntity.ArtistId, ArtistDetails.createArtistDetails(mediaEntity));
-          }
-        }
-
-        mFirstValueTextView.setText(String.format(getString(R.string.format_albums), mAlbumMap.size()));
-        mSecondValueTextView.setText(String.format(getString(R.string.format_artists), mArtistMap.size()));
-        mThirdValueTextView.setText(String.format(getString(R.string.format_playists), 0));
+          mSecondValueTextView.setText(String.format(getString(R.string.format_artists), artistViews.size()));
+          mMediaViewModel.getAllPlaylists().observe(getViewLifecycleOwner(), playlistViews -> mThirdValueTextView.setText(String.format(getString(R.string.format_playlists), playlistViews.size())));
+        });
       });
     }
   }

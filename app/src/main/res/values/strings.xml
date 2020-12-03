@@ -33,13 +33,14 @@
   <string name="remove_specific_song_message">Remove \'%s\' from your library?</string>
   <string name="format_artists">Number of artists: %d</string>
   <string name="format_albums">Number of albums: %d</string>
-  <string name="format_playists">Number of Playlists: %d</string>
+  <string name="format_playlists">Number of Playlists: %d</string>
   <string name="format_authors">Number of Authors: %d</string>
   <string name="format_audiobooks">Number of Audiobooks: %d</string>
   <string name="format_podcasts">Number of podcasts: %d</string>
   <string name="genres">Genres</string>
   <string name="desc_artists_list">List of artists.</string>
   <string name="desc_albums_list">List of albums.</string>
+  <string name="desc_playlists_list">List of playlists.</string>
   <string name="album">Album</string>
   <string name="artist">Artist</string>
   <string name="song">Song</string>
@@ -58,8 +59,10 @@
   <string name="sync_search">Searching and updating media library…</string>
   <string name="desc_options">Do something with this media</string>
   <string name="add_to_playlist">Add to playlist</string>
-  <string name="favorite">Add to Favorites</string>
-  <string name="unfavorite">Remove from Favorites</string>
+  <string name="favorites">Favorites</string>
+  <string name="add_to_favorites">Add to Favorites</string>
+  <string name="remove_from_favorites">Remove from Favorites</string>
   <string name="show">Show in library</string>
   <string name="hide">Hide from library</string>
+  <string name="not_yet_implemented">Not Yet Implemented</string>
 </resources>

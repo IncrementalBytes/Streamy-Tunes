@@ -20,29 +20,30 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import net.whollynugatory.streamytunes.android.R;
 import net.whollynugatory.streamytunes.android.Utils;
+import net.whollynugatory.streamytunes.android.db.MediaDetails;
+import net.whollynugatory.streamytunes.android.db.PlaylistDetails;
 import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
-import net.whollynugatory.streamytunes.android.db.views.AlbumDetails;
+import net.whollynugatory.streamytunes.android.db.viewmodel.MediaViewModel;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class MediaFragment extends Fragment {
 
@@ -50,33 +51,47 @@ public class MediaFragment extends Fragment {
 
   public interface OnMediaListener {
 
-    void onMediaAddToFavorites(MediaEntity mediaEntity);
     void onMediaAddToPlaylist(MediaEntity mediaEntity);
-    void onMediaClicked(Collection<MediaEntity> mediaEntityCollection);
-    void onMediaHideInLibrary(MediaEntity mediaEntity);
-    void onMediaRemoveFromFavorites(MediaEntity mediaEntity);
-    void onMediaShowInLibrary(MediaEntity mediaEntity);
+    void onMediaClicked(Collection<MediaDetails> mediaDetailsCollection);
+    void onMediaUpdateFavorites(MediaEntity mediaEntity);
+    void onMediaUpdateVisible(MediaEntity mediaEntity);
   }
 
   private OnMediaListener mCallback;
-  private List<MediaEntity> mMediaEntityList;
+
+  private long mAlbumId;
+  private long mArtistId;
+  private String mPlaylistId;
+  private MediaViewModel mMediaViewModel;
 
   private RecyclerView mRecyclerView;
 
-  public static MediaFragment newInstance(AlbumDetails albumDetails) {
+  public static MediaFragment newInstanceByAlbum(long albumId) {
 
-    Log.d(TAG, "++newInstance(AlbumDetails)");
-    List<AlbumDetails> albums = new ArrayList<>();
-    albums.add(albumDetails);
-    return newInstance(new ArrayList<>(albums));
+    Log.d(TAG, "++newInstanceByAlbum(long)");
+    MediaFragment fragment = new MediaFragment();
+    Bundle arguments = new Bundle();
+    arguments.putLong(BaseActivity.ARG_ALBUM_ID, albumId);
+    fragment.setArguments(arguments);
+    return fragment;
   }
 
-  public static MediaFragment newInstance(ArrayList<AlbumDetails> albumDetailsList) {
+  public static MediaFragment newInstanceByArtist(long artistId) {
 
-    Log.d(TAG, "++newInstance(ArrayList<AlbumDetails>)");
-    Bundle arguments = new Bundle();
-    arguments.putSerializable(BaseActivity.ARG_ALBUM_DETAILS_LIST, albumDetailsList);
+    Log.d(TAG, "++newInstanceByArtist(long)");
     MediaFragment fragment = new MediaFragment();
+    Bundle arguments = new Bundle();
+    arguments.putLong(BaseActivity.ARG_ARTIST_ID, artistId);
+    fragment.setArguments(arguments);
+    return fragment;
+  }
+
+  public static MediaFragment newInstanceByPlaylist(String playlistId) {
+
+    Log.d(TAG, "++newInstanceByPlaylist(long)");
+    MediaFragment fragment = new MediaFragment();
+    Bundle arguments = new Bundle();
+    arguments.putString(BaseActivity.ARG_PLAYLIST_ID, playlistId);
     fragment.setArguments(arguments);
     return fragment;
   }
@@ -107,16 +122,22 @@ public class MediaFragment extends Fragment {
 
     Bundle arguments = getArguments();
     if (arguments != null) {
-      List<AlbumDetails> albumDetails = (List<AlbumDetails>)arguments.getSerializable(BaseActivity.ARG_ALBUM_DETAILS_LIST);
-      mMediaEntityList = new ArrayList<>();
-      if (albumDetails != null) {
-        for (AlbumDetails album : albumDetails) {
-          for (Map.Entry<Long, MediaEntity> media : album.MediaMap.entrySet()) {
-            mMediaEntityList.add(media.getValue());
-          }
-        }
+      if (arguments.containsKey(BaseActivity.ARG_ALBUM_ID)) {
+        mAlbumId = arguments.getLong(BaseActivity.ARG_ALBUM_ID);
       } else {
-        Log.w(TAG, "No album details in collection.");
+        mAlbumId = -1;
+      }
+
+      if (arguments.containsKey(BaseActivity.ARG_ARTIST_ID)) {
+        mArtistId = arguments.getLong(BaseActivity.ARG_ARTIST_ID);
+      } else {
+        mArtistId = -1;
+      }
+
+      if (arguments.containsKey(BaseActivity.ARG_PLAYLIST_ID)) {
+        mPlaylistId = arguments.getString(BaseActivity.ARG_PLAYLIST_ID);
+      } else {
+        mPlaylistId = BaseActivity.UNKNOWN_GUID;
       }
     } else {
       Log.e(TAG, "Arguments were null.");
@@ -128,6 +149,7 @@ public class MediaFragment extends Fragment {
     super.onCreate(savedInstanceState);
 
     Log.d(TAG, "++onCreate(Bundle)");
+    mMediaViewModel = new ViewModelProvider(this).get(MediaViewModel.class);
   }
 
   @Override
@@ -165,7 +187,34 @@ public class MediaFragment extends Fragment {
 
     MediaAdapter mediaAdapter = new MediaAdapter(getContext());
     mRecyclerView.setAdapter(mediaAdapter);
-    mediaAdapter.setMediaEntityList(mMediaEntityList);
+    if (mAlbumId > BaseActivity.UNKNOWN_ID) {
+      mMediaViewModel.getAllMusicByAlbumId(mAlbumId).observe(getViewLifecycleOwner(), albumWithSongs -> {
+
+        if (albumWithSongs != null && albumWithSongs.size() > 0) {
+          mediaAdapter.setMediaDetailsList(albumWithSongs);
+        } else {
+          // TODO: callback with no media
+        }
+      });
+    } else if (mArtistId > BaseActivity.UNKNOWN_ID) {
+      mMediaViewModel.getAllMusicByArtistId(mArtistId).observe(getViewLifecycleOwner(), artistWithSongs -> {
+
+        if (artistWithSongs != null && artistWithSongs.size() > 0) {
+          mediaAdapter.setMediaDetailsList(artistWithSongs);
+        } else {
+          // TODO: callback with no media
+        }
+      });
+    } else if (!mPlaylistId.isEmpty() && !mPlaylistId.equals(BaseActivity.UNKNOWN_GUID)) {
+      mMediaViewModel.getPlaylistById(mPlaylistId).observe(getViewLifecycleOwner(), playlistSongs -> {
+
+        if (playlistSongs != null && playlistSongs.size() > 0) {
+          mediaAdapter.setPlaylistDetailsList(playlistSongs);
+        } else {
+          // TODO: callback with no media
+        }
+      });
+    }
   }
 
   /*
@@ -182,8 +231,10 @@ public class MediaFragment extends Fragment {
       private final TextView mAlbumTextView;
       private final TextView mArtistTextView;
       private final TextView mTitleTextView;
+      private final ImageView mFavoriteImage;
+      private final ImageView mVisibleImage;
 
-      private MediaEntity mMediaEntity;
+      private MediaDetails mMedia;
 
       MediaHolder(View itemView) {
         super(itemView);
@@ -194,89 +245,77 @@ public class MediaFragment extends Fragment {
         mTitleTextView = itemView.findViewById(R.id.media_item_text_title);
 
         itemView.setOnClickListener(this);
-        ImageView optionsImage = itemView.findViewById(R.id.media_item_image_options);
-        optionsImage.setOnClickListener(v -> {
+        ImageView playlistImage = itemView.findViewById(R.id.media_item_image_playlist);
+        playlistImage.setOnClickListener(v -> mCallback.onMediaAddToPlaylist(mMedia.toMediaEntity()));
 
-          PopupMenu popup = new PopupMenu(mContext, optionsImage);
-          popup.inflate(R.menu.menu_options);
-          popup.setOnMenuItemClickListener(item -> {
-            switch (item.getItemId()) {
-              case R.id.action_option_playlist:
-                Log.d(TAG, "Add to playlist" + mMediaEntity.Title);
-                mCallback.onMediaAddToPlaylist(mMediaEntity);
-                return true;
-              case R.id.action_option_favorite:
-                if (mMediaEntity.IsFavorite) {
-                  Log.d(TAG, "Remove from favorites" + mMediaEntity.Title);
-                  mMediaEntity.IsFavorite = false;
-                  mCallback.onMediaRemoveFromFavorites(mMediaEntity);
-                } else {
-                  Log.d(TAG, "Add to favorites" + mMediaEntity.Title);
-                  mMediaEntity.IsFavorite = true;
-                  mCallback.onMediaAddToFavorites(mMediaEntity);
-                }
-                return true;
-              case R.id.action_option_visible:
-                if (mMediaEntity.IsHidden) {
-                  Log.d(TAG, "Show in library" + mMediaEntity.Title);
-                  mMediaEntity.IsHidden = false;
-                  mCallback.onMediaShowInLibrary(mMediaEntity);
-                } else {
-                  Log.d(TAG, "Hide in library" + mMediaEntity.Title);
-                  mMediaEntity.IsHidden = true;
-                  mCallback.onMediaHideInLibrary(mMediaEntity);
-                }
-                return true;
-              default:
-                return false;
-            }
-          });
+        mFavoriteImage = itemView.findViewById(R.id.media_item_image_favorite);
+        mFavoriteImage.setOnClickListener(v -> {
+          mMedia.IsFavorite = !mMedia.IsFavorite;
+          mCallback.onMediaUpdateFavorites(mMedia.toMediaEntity());
+        });
 
-          popup.show();
+        mVisibleImage = itemView.findViewById(R.id.media_item_image_visible);
+        mVisibleImage.setOnClickListener(v -> {
+          mMedia.IsVisible = !mMedia.IsVisible;
+          mCallback.onMediaUpdateVisible(mMedia.toMediaEntity());
         });
       }
 
-      void bind(MediaEntity mediaEntity) {
+      void bind(MediaDetails media) {
 
-        mMediaEntity = mediaEntity;
-        if (mMediaEntity != null) {
-          Bitmap albumArt = Utils.loadImageFromStorage(getActivity(), mMediaEntity.ArtistId, mMediaEntity.AlbumId);
+        mMedia = media;
+        if (mMedia != null) {
+          Bitmap albumArt = Utils.loadImageFromStorage(getActivity(), mMedia.ArtistId, mMedia.AlbumId);
           if (albumArt != null) {
             mAlbumImage.setImageBitmap(albumArt);
           }
 
-          mAlbumTextView.setText(mMediaEntity.AlbumName);
-          mTitleTextView.setText(mMediaEntity.Title);
-          mArtistTextView.setText(mMediaEntity.ArtistName);
+          mTitleTextView.setText(mMedia.Title);
+          mAlbumTextView.setText(mMedia.AlbumName);
+          mArtistTextView.setText(mMedia.ArtistName);
+
+          if (mMedia.IsFavorite) {
+            mFavoriteImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_favorite_dark, null));
+          } else {
+            mFavoriteImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_unfavorite_dark, null));
+          }
+
+          if (mMedia.IsVisible) {
+            mVisibleImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_visible_dark, null));
+          } else {
+            mVisibleImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_hide_dark, null));
+          }
         }
       }
 
       @Override
       public void onClick(View view) {
 
-        List<MediaEntity> mediaEntityList = new ArrayList<>();
+        List<MediaDetails> mediaList = new ArrayList<>();
         boolean addedToList = false;
-        for (MediaEntity mediaEntity : mMediaEntityList) {
-          if (addedToList) {
-            mediaEntityList.add(mediaEntity);
-          } else if (mediaEntity.Id == mMediaEntity.Id) {
+        for (MediaDetails media : mMediaList) {
+          if (addedToList) { // add media following the media item we are looking for
+            mediaList.add(media);
+          } else if (media.MediaId == mMedia.MediaId) {
             addedToList = true;
-            mediaEntityList.add(mediaEntity);
+            mediaList.add(media);
           }
         }
 
-        mCallback.onMediaClicked(mediaEntityList);
+        mCallback.onMediaClicked(mediaList);
       }
     }
 
+    private final Context mContext;
     private final LayoutInflater mInflater;
-    private List<MediaEntity> mMediaEntityList;
-    private Context mContext;
+
+    private List<MediaDetails> mMediaList;
 
     MediaAdapter(Context context) {
 
       mContext = context;
       mInflater = LayoutInflater.from(context);
+      mMediaList = new ArrayList<>();
     }
 
     @NonNull
@@ -290,9 +329,9 @@ public class MediaFragment extends Fragment {
     @Override
     public void onBindViewHolder(@NonNull MediaAdapter.MediaHolder holder, int position) {
 
-      if (mMediaEntityList != null) {
-        MediaEntity mediaEntity = mMediaEntityList.get(position);
-        holder.bind(mediaEntity);
+      if (mMediaList != null) {
+        MediaDetails media = mMediaList.get(position);
+        holder.bind(media);
       } else {
         // TODO: No songs!
       }
@@ -301,18 +340,29 @@ public class MediaFragment extends Fragment {
     @Override
     public int getItemCount() {
 
-      if (mMediaEntityList != null) {
-        return mMediaEntityList.size();
+      if (mMediaList != null) {
+        return mMediaList.size();
       } else {
         return 0;
       }
     }
 
-    void setMediaEntityList(Collection<MediaEntity> mediaEntityCollection) {
+    void setMediaDetailsList(List<MediaDetails> mediaList) {
 
-      Log.d(TAG, "++setMediaEntityList(Collection<MediaEntity>)");
-      mMediaEntityList = new ArrayList<>();
-      mMediaEntityList.addAll(mediaEntityCollection);
+      Log.d(TAG, "++setMediaDetailsList(List<MediaDetails>)");
+      mMediaList = new ArrayList<>();
+      mMediaList.addAll(mediaList);
+      notifyDataSetChanged();
+    }
+
+    void setPlaylistDetailsList(List<PlaylistDetails> playlist) {
+
+      Log.d(TAG, "++setPlaylistDetailsList(List<PlaylistDetails>)");
+      mMediaList = new ArrayList<>();
+      for (PlaylistDetails playlistDetails : playlist) {
+        mMediaList.add(playlistDetails.toMediaDetails());
+      }
+
       notifyDataSetChanged();
     }
   }

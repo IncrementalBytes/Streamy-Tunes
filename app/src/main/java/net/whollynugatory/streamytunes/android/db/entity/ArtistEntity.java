@@ -22,50 +22,21 @@ import androidx.room.PrimaryKey;
 
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
-@Entity(tableName = MediaEntity.TABLE_NAME)
-public class MediaEntity {
+@Entity(tableName = ArtistEntity.TABLE_NAME)
+public class ArtistEntity {
 
   @Ignore
-  public static final  String TABLE_NAME = "media_table";
+  public static final  String TABLE_NAME = "artists_table";
 
   @PrimaryKey
-  public long MediaId;
-
-  @NonNull
-  public String Title;
-
-  public long AlbumId;
-
   public long ArtistId;
 
-  public boolean IsAudiobook;
+  @NonNull
+  public String ArtistName;
 
-  public boolean IsExternal;
+  public ArtistEntity() {
 
-  public boolean IsFavorite;
-
-  public boolean IsVisible;
-
-  public boolean IsMusic;
-
-  public boolean IsPodcast;
-
-  public int TrackNumber;
-
-  public int Year;
-
-  public MediaEntity() {
-
-    MediaId = BaseActivity.UNKNOWN_ID;
-    Title = BaseActivity.UNKNOWN_STRING;
-    AlbumId = BaseActivity.UNKNOWN_ID;
-    IsAudiobook = false;
-    IsExternal = false;
-    IsFavorite = false;
-    IsVisible = true;
-    IsMusic = false;
-    IsPodcast = false;
-    TrackNumber = 0;
-    Year = 0;
+    ArtistId = BaseActivity.UNKNOWN_ID;
+    ArtistName = BaseActivity.UNKNOWN_STRING;
   }
 }

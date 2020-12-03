@@ -17,14 +17,21 @@ package net.whollynugatory.streamytunes.android.db.repository;
 
 import android.util.Log;
 
-import net.whollynugatory.streamytunes.android.db.StreamyTunesDatabase;
+import androidx.lifecycle.LiveData;
+
+import net.whollynugatory.streamytunes.android.db.AlbumsView;
+import net.whollynugatory.streamytunes.android.db.ArtistsView;
+import net.whollynugatory.streamytunes.android.db.MediaDetails;
+import net.whollynugatory.streamytunes.android.db.PlaylistDetails;
+import net.whollynugatory.streamytunes.android.db.PlaylistsView;
 import net.whollynugatory.streamytunes.android.db.dao.MediaDao;
+import net.whollynugatory.streamytunes.android.db.entity.AlbumEntity;
+import net.whollynugatory.streamytunes.android.db.entity.ArtistEntity;
 import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
+import net.whollynugatory.streamytunes.android.db.entity.PlaylistEntity;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.List;
-
-import androidx.lifecycle.LiveData;
 
 public class MediaRepository {
 
@@ -44,7 +51,7 @@ public class MediaRepository {
     if (INSTANCE == null) {
       synchronized (MediaRepository.class) {
         if (INSTANCE == null) {
-          Log.d(TAG, "++getInstance(Context)");
+          Log.d(TAG, "++getInstance(MediaDao)");
           INSTANCE = new MediaRepository(mediaDao);
         }
       }
@@ -53,38 +60,78 @@ public class MediaRepository {
     return INSTANCE;
   }
 
-  public void deleteMedia(String mediaId) {
+  public void deletePlaylist(PlaylistEntity playlistEntity) {
 
-    StreamyTunesDatabase.databaseWriteExecutor.execute(() -> mMediaDao.delete(mediaId));
+    mMediaDao.deletePlaylist(playlistEntity);
   }
 
-  public LiveData<List<MediaEntity>> getAll() {
+  public LiveData<List<AlbumsView>> getAllAlbums() {
 
-    return mMediaDao.getAll();
+    return mMediaDao.getAllAlbums();
   }
 
-  public LiveData<List<MediaEntity>> getAllAudiobooks() {
+  public LiveData<List<ArtistsView>> getAllArtists() {
+
+    return mMediaDao.getAllArtists();
+  }
+
+  public LiveData<List<MediaDetails>> getAllAudiobooks() {
 
     return mMediaDao.getAllAudiobooks();
   }
 
-  public LiveData<List<MediaEntity>> getAllMusic() {
+  public LiveData<List<MediaDetails>> getAllMusic() {
 
     return mMediaDao.getAllMusic();
   }
 
-  public LiveData<List<MediaEntity>> getAllPodcasts() {
+  public LiveData<List<MediaDetails>> getAllMusicByAlbumId(long albumId) {
+
+    return mMediaDao.getAllMusicByAlbumId(albumId);
+  }
+
+  public LiveData<List<MediaDetails>> getAllMusicByArtistId(long artistId) {
+
+    return mMediaDao.getAllMusicByArtistId(artistId);
+  }
+
+  public LiveData<List<PlaylistDetails>> getPlaylistById(String playlistId) {
+
+    return mMediaDao.getPlaylistById(playlistId);
+  }
+
+  public LiveData<List<PlaylistsView>> getAllPlaylists() {
+
+    return mMediaDao.getAllPlaylists();
+  }
+
+  public LiveData<List<MediaDetails>> getAllPodcasts() {
 
     return mMediaDao.getAllPodcasts();
   }
 
+  public void insertAlbum(AlbumEntity albumEntity) {
+
+    mMediaDao.insertAlbum(albumEntity);
+  }
+
+  public void insertArtist(ArtistEntity artistEntity) {
+
+    mMediaDao.insertArtist(artistEntity);
+  }
+
   public void insertMedia(MediaEntity mediaEntity) {
 
-    StreamyTunesDatabase.databaseWriteExecutor.execute(() -> mMediaDao.insert(mediaEntity));
+    mMediaDao.insertMedia(mediaEntity);
+  }
+
+  public void insertPlaylist(PlaylistEntity playlistEntity) {
+
+    mMediaDao.insertPlaylist(playlistEntity);
   }
 
   public void updateMedia(MediaEntity mediaEntity) {
 
-    StreamyTunesDatabase.databaseWriteExecutor.execute(() -> mMediaDao.update(mediaEntity));
+    mMediaDao.updateMedia(mediaEntity);
   }
 }

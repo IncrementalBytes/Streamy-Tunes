@@ -17,39 +17,73 @@ package net.whollynugatory.streamytunes.android.db.dao;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
-import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
+import net.whollynugatory.streamytunes.android.db.AlbumsView;
+import net.whollynugatory.streamytunes.android.db.ArtistsView;
+import net.whollynugatory.streamytunes.android.db.MediaDetails;
+import net.whollynugatory.streamytunes.android.db.PlaylistDetails;
+import net.whollynugatory.streamytunes.android.db.PlaylistsView;
+import net.whollynugatory.streamytunes.android.db.entity.AlbumEntity;
+import net.whollynugatory.streamytunes.android.db.entity.ArtistEntity;
 import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
+import net.whollynugatory.streamytunes.android.db.entity.PlaylistEntity;
 
 import java.util.List;
 
 @Dao
 public interface MediaDao {
 
-  @Query("DELETE FROM media_table WHERE id = :id")
-  void delete(String id);
+  @Delete
+  void deletePlaylist(PlaylistEntity playlistEntity);
 
-  @Query("SELECT * FROM media_table")
-  LiveData<List<MediaEntity>> getAll();
+  @Query("SELECT * FROM AlbumsView")
+  LiveData<List<AlbumsView>> getAllAlbums();
 
-  @Query("SELECT * FROM media_table WHERE is_audiobook == 1")
-  LiveData<List<MediaEntity>> getAllAudiobooks();
+  @Query("SELECT * FROM ArtistsView")
+  LiveData<List<ArtistsView>> getAllArtists();
 
-  @Query("SELECT * FROM media_table WHERE is_music == 1")
-  LiveData<List<MediaEntity>> getAllMusic();
+//  @Transaction
+  @Query("SELECT * FROM media_table WHERE IsAudiobook == 1")
+  LiveData<List<MediaDetails>> getAllAudiobooks();
 
-  @Query("SELECT * FROM media_table WHERE is_podcast == 1")
-  LiveData<List<MediaEntity>> getAllPodcasts();
+//  @Transaction
+  @Query("SELECT * FROM media_table WHERE IsMusic == 1")
+  LiveData<List<MediaDetails>> getAllMusic();
 
-  @Insert(onConflict = OnConflictStrategy.IGNORE)
-  void insert(MediaEntity mediaEntity);
+//  @Transaction
+  @Query("SELECT * FROM MediaDetails WHERE IsMusic == 1 AND AlbumId == :albumId")
+  LiveData<List<MediaDetails>> getAllMusicByAlbumId(long albumId);
 
-  @Insert(onConflict = OnConflictStrategy.IGNORE)
-  void insertAll(List<MediaEntity> mediaEntityList);
+//  @Transaction
+  @Query("SELECT * FROM MediaDetails WHERE IsMusic == 1 AND ArtistId == :artistId")
+  LiveData<List<MediaDetails>> getAllMusicByArtistId(long artistId);
+
+  @Query("SELECT * FROM PlaylistDetails WHERE PlaylistId == :playlistId")
+  LiveData<List<PlaylistDetails>> getPlaylistById(String playlistId);
+
+  @Query("SELECT * FROM PlaylistsView")
+  LiveData<List<PlaylistsView>> getAllPlaylists();
+
+//  @Transaction
+  @Query("SELECT * FROM media_table WHERE IsPodcast == 1")
+  LiveData<List<MediaDetails>> getAllPodcasts();
+
+  @Insert
+  void insertAlbum(AlbumEntity albumEntity);
+
+  @Insert
+  void insertArtist(ArtistEntity artistEntity);
+
+  @Insert
+  void insertMedia(MediaEntity mediaEntity);
+
+  @Insert
+  void insertPlaylist(PlaylistEntity playlistEntity);
 
   @Update
-  void update(MediaEntity mediaEntity);
+  void updateMedia(MediaEntity mediaEntity);
 }

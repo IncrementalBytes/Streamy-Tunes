@@ -22,50 +22,35 @@ import androidx.room.PrimaryKey;
 
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
-@Entity(tableName = MediaEntity.TABLE_NAME)
-public class MediaEntity {
+import java.util.Calendar;
+import java.util.UUID;
+
+@Entity(tableName = PlaylistEntity.TABLE_NAME)
+public class PlaylistEntity {
 
   @Ignore
-  public static final  String TABLE_NAME = "media_table";
+  public static final  String TABLE_NAME = "playlists_table";
 
   @PrimaryKey
-  public long MediaId;
+  @NonNull
+  public String Id;
 
   @NonNull
-  public String Title;
+  public String PlaylistId;
 
-  public long AlbumId;
+  @NonNull
+  public String PlaylistName;
 
-  public long ArtistId;
+  public long MediaId;
 
-  public boolean IsAudiobook;
+  public long AddedTimeStamp;
 
-  public boolean IsExternal;
+  public PlaylistEntity() {
 
-  public boolean IsFavorite;
-
-  public boolean IsVisible;
-
-  public boolean IsMusic;
-
-  public boolean IsPodcast;
-
-  public int TrackNumber;
-
-  public int Year;
-
-  public MediaEntity() {
-
+    Id = UUID.randomUUID().toString();
+    PlaylistId = BaseActivity.UNKNOWN_GUID;
+    PlaylistName = BaseActivity.UNKNOWN_STRING;
     MediaId = BaseActivity.UNKNOWN_ID;
-    Title = BaseActivity.UNKNOWN_STRING;
-    AlbumId = BaseActivity.UNKNOWN_ID;
-    IsAudiobook = false;
-    IsExternal = false;
-    IsFavorite = false;
-    IsVisible = true;
-    IsMusic = false;
-    IsPodcast = false;
-    TrackNumber = 0;
-    Year = 0;
+    AddedTimeStamp = Calendar.getInstance().getTimeInMillis();
   }
 }

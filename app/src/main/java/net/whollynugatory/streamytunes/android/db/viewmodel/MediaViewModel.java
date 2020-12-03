@@ -21,8 +21,12 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
+import net.whollynugatory.streamytunes.android.db.AlbumsView;
+import net.whollynugatory.streamytunes.android.db.ArtistsView;
+import net.whollynugatory.streamytunes.android.db.MediaDetails;
+import net.whollynugatory.streamytunes.android.db.PlaylistDetails;
+import net.whollynugatory.streamytunes.android.db.PlaylistsView;
 import net.whollynugatory.streamytunes.android.db.StreamyTunesDatabase;
-import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
 import net.whollynugatory.streamytunes.android.db.repository.MediaRepository;
 
 import java.util.List;
@@ -37,22 +41,47 @@ public class MediaViewModel extends AndroidViewModel {
     mMediaRepository = MediaRepository.getInstance(StreamyTunesDatabase.getInstance(application).mediaDao());
   }
 
-  public LiveData<List<MediaEntity>> getAll() {
+  public LiveData<List<AlbumsView>> getAllAlbums() {
 
-    return mMediaRepository.getAll();
+    return mMediaRepository.getAllAlbums();
   }
 
-  public LiveData<List<MediaEntity>> getAllAudiobooks() {
+  public LiveData<List<ArtistsView>> getAllArtists() {
+
+    return mMediaRepository.getAllArtists();
+  }
+
+  public LiveData<List<MediaDetails>> getAllAudiobooks() {
 
     return mMediaRepository.getAllAudiobooks();
   }
 
-  public LiveData<List<MediaEntity>> getAllMusic() {
+  public LiveData<List<MediaDetails>> getAllMusic() {
 
     return mMediaRepository.getAllMusic();
   }
 
-  public LiveData<List<MediaEntity>> getAllPodcasts() {
+  public LiveData<List<MediaDetails>> getAllMusicByAlbumId(long albumId) {
+
+    return mMediaRepository.getAllMusicByAlbumId(albumId);
+  }
+
+  public LiveData<List<MediaDetails>> getAllMusicByArtistId(long artistId) {
+
+    return mMediaRepository.getAllMusicByArtistId(artistId);
+  }
+
+    public LiveData<List<PlaylistDetails>> getPlaylistById(String playlistId) {
+
+    return mMediaRepository.getPlaylistById(playlistId);
+  }
+
+  public LiveData<List<PlaylistsView>> getAllPlaylists() {
+
+    return mMediaRepository.getAllPlaylists();
+  }
+
+  public LiveData<List<MediaDetails>> getAllPodcasts() {
 
     return mMediaRepository.getAllPodcasts();
   }

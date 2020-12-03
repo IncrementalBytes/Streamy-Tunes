@@ -25,14 +25,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.db.ArtistsView;
+import net.whollynugatory.streamytunes.android.db.PlaylistsView;
 import net.whollynugatory.streamytunes.android.db.viewmodel.MediaViewModel;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
@@ -41,23 +40,25 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
-public class ArtistsFragment extends Fragment {
+public class PlaylistFragment extends Fragment {
 
-  private static final String TAG = BaseActivity.BASE_TAG + ArtistsFragment.class.getSimpleName();
+  private static final String TAG = BaseActivity.BASE_TAG + PlaylistFragment.class.getSimpleName();
 
-  public interface OnArtistListener {
+  public interface OnPlaylistListener {
 
-    void onArtistClicked(long artistId);
+    void onPlaylistClicked(String playlistId);
   }
 
-  private OnArtistListener mCallback;
+  private OnPlaylistListener mCallback;
+
   private MediaViewModel mMediaViewModel;
+
   private RecyclerView mRecyclerView;
 
-  public static ArtistsFragment newInstance() {
+  public static PlaylistFragment newInstance() {
 
     Log.d(TAG, "++newInstance()");
-    return new ArtistsFragment();
+    return new PlaylistFragment();
   }
 
   /*
@@ -78,7 +79,7 @@ public class ArtistsFragment extends Fragment {
 
     Log.d(TAG, "++onAttach(Context)");
     try {
-      mCallback = (OnArtistListener) context;
+      mCallback = (OnPlaylistListener) context;
     } catch (ClassCastException e) {
       throw new ClassCastException(
         String.format(Locale.ENGLISH, "Missing interface implementations for %s", context.toString()));
@@ -97,8 +98,8 @@ public class ArtistsFragment extends Fragment {
   public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
     Log.d(TAG, "++onCreateView(LayoutInflater, ViewGroup, Bundle)");
-    View view =  inflater.inflate(R.layout.fragment_artists, container, false);
-    mRecyclerView = view.findViewById(R.id.artists_list_view);
+    View view = inflater.inflate(R.layout.fragment_playlist, container, false);
+    mRecyclerView = view.findViewById(R.id.playlist_list_view);
     return view;
   }
 
@@ -126,41 +127,42 @@ public class ArtistsFragment extends Fragment {
 
   private void updateUI() {
 
-    ArtistsAdapter artistsAdapter = new ArtistsAdapter(getContext());
-    mRecyclerView.setAdapter(artistsAdapter);
-    mMediaViewModel.getAllArtists().observe(getViewLifecycleOwner(), artists -> {
+    PlaylistAdapter playlistAdapter = new PlaylistAdapter(getContext());
+    mRecyclerView.setAdapter(playlistAdapter);
+    mMediaViewModel.getAllPlaylists().observe(getViewLifecycleOwner(), playlistsView -> {
 
-      if (artists == null || artists.size() == 0) {
+      if (playlistsView == null || playlistsView.size() == 0) {
         // TODO: callback to activity
       } else {
-        artistsAdapter.setArtistsList(artists);
+        playlistAdapter.setPlaylistCollection(playlistsView);
       }
     });
   }
 
   /*
-    Adapter class for Artists objects
+    Adapter class for Playlist objects
    */
-  private class ArtistsAdapter extends RecyclerView.Adapter<ArtistsAdapter.ArtistsHolder> {
+  private class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.PlaylistHolder> {
 
     /*
-      Holder class for Artists objects
+      Holder class for Playlist objects
      */
-    class ArtistsHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    class PlaylistHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
+      private final ImageView mImage;
+      private final TextView mPlaylistTextView;
       private final TextView mArtistTextView;
-      private final TextView mAlbumTextView;
       private final TextView mSongsTextView;
 
-      private ArtistsView mArtist;
+      private PlaylistsView mPlaylist;
 
-      ArtistsHolder(View itemView) {
+      PlaylistHolder(View itemView) {
         super(itemView);
 
-        ImageView imageView = itemView.findViewById(R.id.media_item_image);
-        imageView.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_artist_dark, null));
-        mArtistTextView = itemView.findViewById(R.id.media_item_text_title);
-        mAlbumTextView = itemView.findViewById(R.id.media_item_text_subtitle);
+        mImage = itemView.findViewById(R.id.media_item_image);
+        mPlaylistTextView = itemView.findViewById(R.id.media_item_text_title);
+        mArtistTextView = itemView.findViewById(R.id.media_item_text_subtitle);
+        mArtistTextView.setVisibility(View.INVISIBLE);
         mSongsTextView = itemView.findViewById(R.id.media_item_text_details);
 
         ImageView favoriteImage = itemView.findViewById(R.id.media_item_image_favorite);
@@ -173,66 +175,65 @@ public class ArtistsFragment extends Fragment {
         itemView.setOnClickListener(this);
       }
 
-      void bind(ArtistsView artist) {
+      void bind(PlaylistsView playlist) {
 
-        mArtist = artist;
+        mPlaylist = playlist;
 
-        if (mArtist != null) {
-          mArtistTextView.setText(mArtist.ArtistName);
-          mAlbumTextView.setText(String.format(getString(R.string.format_albums), mArtist.AlbumCount));
-          mSongsTextView.setText(String.format(getString(R.string.format_songs), mArtist.SongCount));
+        if (mPlaylist != null) {
+          mPlaylistTextView.setText(mPlaylist.PlaylistName);
+          mSongsTextView.setText(String.format(getString(R.string.format_songs), mPlaylist.SongCount));
         }
       }
 
       @Override
       public void onClick(View view) {
 
-        mCallback.onArtistClicked(mArtist.ArtistId);
+        mCallback.onPlaylistClicked(mPlaylist.PlaylistId);
       }
     }
 
     private final LayoutInflater mInflater;
-    private List<ArtistsView> mArtists;
+    private List<PlaylistsView> mPlaylists;
 
-    ArtistsAdapter(Context context) {
+    PlaylistAdapter(Context context) {
 
       mInflater = LayoutInflater.from(context);
     }
 
     @NonNull
     @Override
-    public ArtistsHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public PlaylistAdapter.PlaylistHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
       View itemView = mInflater.inflate(R.layout.item_media, parent, false);
-      return new ArtistsHolder(itemView);
+      return new PlaylistAdapter.PlaylistHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ArtistsHolder holder, int position) {
+    public void onBindViewHolder(@NonNull PlaylistAdapter.PlaylistHolder holder, int position) {
 
-      if (mArtists != null) {
-        ArtistsView artist = mArtists.get(position);
-        holder.bind(artist);
+      if (mPlaylists != null) {
+        PlaylistsView playlist = mPlaylists.get(position);
+        holder.bind(playlist);
       } else {
-        // TODO: No artists!
+        // TODO: No albums!
       }
     }
 
     @Override
     public int getItemCount() {
 
-      if (mArtists != null) {
-        return mArtists.size();
+      if (mPlaylists != null) {
+        return mPlaylists.size();
       } else {
         return 0;
       }
     }
 
-    void setArtistsList(Collection<ArtistsView> artists) {
+    void setPlaylistCollection(Collection<PlaylistsView> playlists) {
 
-      Log.d(TAG, "++setArtistsList(Collection<ArtistsView>)");
-      mArtists = new ArrayList<>();
-      mArtists.addAll(artists);
+      Log.d(TAG, "++setPlaylistCollection(Collection<PlaylistsView>)");
+      mPlaylists = new ArrayList<>();
+      mPlaylists.addAll(playlists);
       notifyDataSetChanged();
     }
   }

@@ -31,7 +31,7 @@
     android:textColor="@color/primaryAccentText"
     android:textSize="18sp"
     android:textStyle="bold"
-    app:layout_constraintEnd_toEndOf="@id/media_item_image_options"
+    app:layout_constraintEnd_toStartOf="@id/media_item_image_playlist"
     app:layout_constraintStart_toEndOf="@id/media_item_image"
     app:layout_constraintTop_toTopOf="parent" />
 
@@ -46,9 +46,21 @@
     android:textColor="@color/colorPrimary"
     android:textSize="14sp"
     android:textStyle="bold"
-    app:layout_constraintEnd_toEndOf="@id/media_item_image_options"
+    app:layout_constraintEnd_toStartOf="@id/media_item_image_playlist"
     app:layout_constraintStart_toEndOf="@id/media_item_image"
     app:layout_constraintTop_toBottomOf="@id/media_item_text_title" />
+
+  <ImageView
+    android:id="@+id/media_item_image_playlist"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@color/transparent"
+    android:src="@drawable/ic_playlist_dark"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toEndOf="@id/media_item_text_subtitle"
+    app:layout_constraintBottom_toTopOf="@id/media_item_image_visible"
+    android:contentDescription="@string/desc_options" />
 
   <TextView
     android:id="@+id/media_item_text_details"
@@ -60,17 +72,30 @@
     android:text="@string/placeholder"
     android:textStyle="bold"
     app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="@id/media_item_image_options"
+    app:layout_constraintEnd_toStartOf="@id/media_item_image_favorite"
     app:layout_constraintStart_toEndOf="@id/media_item_image"
     app:layout_constraintTop_toBottomOf="@id/media_item_text_subtitle" />
 
   <ImageView
-    android:id="@+id/media_item_image_options"
+    android:id="@+id/media_item_image_favorite"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:layout_margin="@dimen/default_view_margin"
     android:background="@color/transparent"
-    android:src="@drawable/ic_vertical_dark"
-    app:layout_constraintTop_toTopOf="parent"
+    android:src="@drawable/ic_unfavorite_dark"
+    app:layout_constraintTop_toBottomOf="@id/media_item_text_subtitle"
+    app:layout_constraintEnd_toStartOf="@id/media_item_image_visible"
+    app:layout_constraintBottom_toBottomOf="parent"
+    android:contentDescription="@string/desc_options" />
+
+  <ImageView
+    android:id="@+id/media_item_image_visible"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/default_view_margin"
+    android:background="@color/transparent"
+    android:src="@drawable/ic_visible_dark"
+    app:layout_constraintTop_toBottomOf="@id/media_item_text_subtitle"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintBottom_toBottomOf="parent"
     android:contentDescription="@string/desc_options" />

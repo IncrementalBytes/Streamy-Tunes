@@ -25,25 +25,20 @@ import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import net.whollynugatory.streamytunes.android.db.dao.MediaDao;
+import net.whollynugatory.streamytunes.android.db.entity.AlbumEntity;
+import net.whollynugatory.streamytunes.android.db.entity.ArtistEntity;
+import net.whollynugatory.streamytunes.android.db.entity.PlaylistEntity;
 import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
-import net.whollynugatory.streamytunes.android.db.views.AlbumDetails;
-import net.whollynugatory.streamytunes.android.db.views.ArtistDetails;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 @Database(
-  entities = {MediaEntity.class},
-  views = {AlbumDetails.class, ArtistDetails.class},
+  entities = {AlbumEntity.class, ArtistEntity.class, MediaEntity.class, PlaylistEntity.class},
+  views = {AlbumsView.class, ArtistsView.class, MediaDetails.class,PlaylistDetails.class,PlaylistsView.class},
   version = 1,
   exportSchema = false)
 public abstract class StreamyTunesDatabase extends RoomDatabase {
 
   private static final String TAG = BaseActivity.BASE_TAG + StreamyTunesDatabase.class.getSimpleName();
-  private static final int NUMBER_OF_THREADS = 4;
-
-  public static final ExecutorService databaseWriteExecutor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
 
   public abstract MediaDao mediaDao();
 
@@ -71,6 +66,12 @@ public abstract class StreamyTunesDatabase extends RoomDatabase {
       super.onCreate(db);
 
       Log.d(TAG, "++onCreate(SupportSQLiteDatabase)");
+//      ContentValues contentValues = new ContentValues();
+//      contentValues.put("Id", UUID.randomUUID().toString());
+//      contentValues.put("PlaylistId", BaseActivity.DEFAULT_PLAYLIST_FAVORITES_ID);
+//      contentValues.put("PlaylistName", BaseActivity.DEFAULT_PLAYLIST_FAVORITES);
+//      contentValues.put("AddedTimeStamp", Calendar.getInstance().getTimeInMillis());
+//      db.insert(PlaylistEntity.TABLE_NAME, CONFLICT_REPLACE, contentValues);
     }
 
     @Override

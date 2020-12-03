@@ -27,12 +27,14 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import net.whollynugatory.streamytunes.android.R;
 import net.whollynugatory.streamytunes.android.Utils;
-import net.whollynugatory.streamytunes.android.db.views.AlbumDetails;
+import net.whollynugatory.streamytunes.android.db.AlbumsView;
+import net.whollynugatory.streamytunes.android.db.viewmodel.MediaViewModel;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.ArrayList;
@@ -46,22 +48,19 @@ public class AlbumsFragment extends Fragment {
 
   public interface OnAlbumListener {
 
-    void onAlbumClicked(AlbumDetails albumDetails);
+    void onAlbumClicked(long albumId);
   }
 
   private OnAlbumListener mCallback;
-  private List<AlbumDetails> mAlbumDetailsList;
+
+  private MediaViewModel mMediaViewModel;
 
   private RecyclerView mRecyclerView;
 
-  public static AlbumsFragment newInstance(ArrayList<AlbumDetails> albumDetailsList) {
+  public static AlbumsFragment newInstance() {
 
-    Log.d(TAG, "++newInstance(ArrayList<AlbumDetails>)");
-    Bundle arguments = new Bundle();
-    arguments.putSerializable(BaseActivity.ARG_ALBUM_DETAILS_LIST, albumDetailsList);
-    AlbumsFragment fragment = new AlbumsFragment();
-    fragment.setArguments(arguments);
-    return fragment;
+    Log.d(TAG, "++newInstance()");
+    return new AlbumsFragment();
   }
 
   /*
@@ -87,13 +86,6 @@ public class AlbumsFragment extends Fragment {
       throw new ClassCastException(
         String.format(Locale.ENGLISH, "Missing interface implementations for %s", context.toString()));
     }
-
-    Bundle arguments = getArguments();
-    if (arguments != null) {
-      mAlbumDetailsList = (List<AlbumDetails>)arguments.getSerializable(BaseActivity.ARG_ALBUM_DETAILS_LIST);
-    } else {
-      Log.e(TAG, "Arguments were null.");
-    }
   }
 
   @Override
@@ -101,6 +93,7 @@ public class AlbumsFragment extends Fragment {
     super.onCreate(savedInstanceState);
 
     Log.d(TAG, "++onCreate(Bundle)");
+    mMediaViewModel = new ViewModelProvider(this).get(MediaViewModel.class);
   }
 
   @Override
@@ -138,7 +131,14 @@ public class AlbumsFragment extends Fragment {
 
     AlbumAdapter albumAdapter = new AlbumAdapter(getContext());
     mRecyclerView.setAdapter(albumAdapter);
-    albumAdapter.setAlbumInfoList(mAlbumDetailsList);
+    mMediaViewModel.getAllAlbums().observe(getViewLifecycleOwner(), albums -> {
+
+      if (albums == null || albums.size() == 0) {
+        // TODO: callback to activity
+      } else {
+        albumAdapter.setAlbumsList(albums);
+      }
+    });
   }
 
   /*
@@ -156,7 +156,7 @@ public class AlbumsFragment extends Fragment {
       private final TextView mArtistTextView;
       private final TextView mSongsTextView;
 
-      private AlbumDetails mAlbumDetails;
+      private AlbumsView mAlbum;
 
       AlbumHolder(View itemView) {
         super(itemView);
@@ -165,37 +165,42 @@ public class AlbumsFragment extends Fragment {
         mAlbumTextView = itemView.findViewById(R.id.media_item_text_title);
         mArtistTextView = itemView.findViewById(R.id.media_item_text_subtitle);
         mSongsTextView = itemView.findViewById(R.id.media_item_text_details);
-        ImageView optionsImage = itemView.findViewById(R.id.media_item_image_options);
-        optionsImage.setVisibility(View.INVISIBLE);
+
+        ImageView favoriteImage = itemView.findViewById(R.id.media_item_image_favorite);
+        favoriteImage.setVisibility(View.INVISIBLE);
+        ImageView playlistImage = itemView.findViewById(R.id.media_item_image_playlist);
+        playlistImage.setVisibility(View.INVISIBLE);
+        ImageView visibleImage = itemView.findViewById(R.id.media_item_image_visible);
+        visibleImage.setVisibility(View.INVISIBLE);
 
         itemView.setOnClickListener(this);
       }
 
-      void bind(AlbumDetails albumDetails) {
+      void bind(AlbumsView album) {
 
-        mAlbumDetails = albumDetails;
+        mAlbum = album;
 
-        if (mAlbumDetails != null) {
-          Bitmap albumArt = Utils.loadImageFromStorage(getActivity(), mAlbumDetails.ArtistId, mAlbumDetails.Id);
+        if (mAlbum != null) {
+          Bitmap albumArt = Utils.loadImageFromStorage(getActivity(), mAlbum.ArtistId, mAlbum.AlbumId);
           if (albumArt != null) {
             mAlbumImage.setImageBitmap(albumArt);
           }
 
-          mAlbumTextView.setText(mAlbumDetails.Name);
-          mSongsTextView.setText(String.format(getString(R.string.format_songs), mAlbumDetails.MediaMap.values().size()));
-          mArtistTextView.setText(mAlbumDetails.ArtistName);
+          mAlbumTextView.setText(mAlbum.AlbumName);
+          mSongsTextView.setText(String.format(getString(R.string.format_songs), mAlbum.SongCount));
+          mArtistTextView.setText(mAlbum.ArtistName);
         }
       }
 
       @Override
       public void onClick(View view) {
 
-        mCallback.onAlbumClicked(mAlbumDetails);
+        mCallback.onAlbumClicked(mAlbum.AlbumId);
       }
     }
 
     private final LayoutInflater mInflater;
-    private List<AlbumDetails> mAlbumDetailsList;
+    private List<AlbumsView> mAlbums;
 
     AlbumAdapter(Context context) {
 
@@ -213,9 +218,9 @@ public class AlbumsFragment extends Fragment {
     @Override
     public void onBindViewHolder(@NonNull AlbumHolder holder, int position) {
 
-      if (mAlbumDetailsList != null) {
-        AlbumDetails albumDetails = mAlbumDetailsList.get(position);
-        holder.bind(albumDetails);
+      if (mAlbums != null) {
+        AlbumsView album = mAlbums.get(position);
+        holder.bind(album);
       } else {
         // TODO: No albums!
       }
@@ -224,18 +229,18 @@ public class AlbumsFragment extends Fragment {
     @Override
     public int getItemCount() {
 
-      if (mAlbumDetailsList != null) {
-        return mAlbumDetailsList.size();
+      if (mAlbums != null) {
+        return mAlbums.size();
       } else {
         return 0;
       }
     }
 
-    void setAlbumInfoList(Collection<AlbumDetails> albumDetailsCollection) {
+    void setAlbumsList(Collection<AlbumsView> albums) {
 
-      Log.d(TAG, "++setAlbumInfoList(Collection<AlbumDetails>)");
-      mAlbumDetailsList = new ArrayList<>();
-      mAlbumDetailsList.addAll(albumDetailsCollection);
+      Log.d(TAG, "++setAlbumsList(Collection<AlbumsView>)");
+      mAlbums = new ArrayList<>();
+      mAlbums.addAll(albums);
       notifyDataSetChanged();
     }
   }

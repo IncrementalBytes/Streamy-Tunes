@@ -21,13 +21,21 @@ public class BaseActivity extends AppCompatActivity {
 
   public static final String BASE_TAG = "StreamyTunes::";
 
+  public static final int UNKNOWN_ID = -1;
+  public static final String UNKNOWN_STRING = "UNKNOWN";
+  public static final String UNKNOWN_GUID = "00000000-0000-0000-0000-0000000000000";
+
   public static final int REQUEST_SYNC = 1001;
 
-  public static final String ARG_ALBUM_DETAILS_LIST = "album_details_list";
-  public static final String ARG_ARTIST_DETAILS_LIST = "artist_details_list";
+  public static final String ARG_ALBUM_ID = "album_id";
+  public static final String ARG_ARTIST_ID = "artist_id";
+  public static final String ARG_MEDIA_DETAILS_LIST = "media_details_list";
   public static final String ARG_MEDIA_ENTITY_LIST = "media_entity_list";
+  public static final String ARG_PLAYLIST_ID = "playlist_id";
 
   public static final String DATABASE_NAME = "streamytunes-db.sqlite";
+  public static final String DEFAULT_PLAYLIST_FAVORITES_ID = "5BD0B3B2-8362-4D3F-8EC4-BA4921ABF578";
+  public static final String DEFAULT_PLAYLIST_FAVORITES = "Favorites";
 
   public static final int REQUEST_STORAGE_PERMISSIONS = 2001;
 }

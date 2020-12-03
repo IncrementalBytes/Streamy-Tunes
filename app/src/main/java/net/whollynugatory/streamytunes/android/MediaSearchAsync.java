@@ -25,6 +25,8 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.util.Size;
 
+import net.whollynugatory.streamytunes.android.db.entity.AlbumEntity;
+import net.whollynugatory.streamytunes.android.db.entity.ArtistEntity;
 import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
 import net.whollynugatory.streamytunes.android.db.repository.MediaRepository;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
@@ -38,9 +40,8 @@ public class MediaSearchAsync extends AsyncTask<Void, Void, Void> {
 
   private static final String TAG = BaseActivity.BASE_TAG + MediaSearchAsync.class.getSimpleName();
 
-  private final WeakReference<SyncActivity> mWeakReference;
-
   private final MediaRepository mRepository;
+  private final WeakReference<SyncActivity> mWeakReference;
 
   public MediaSearchAsync(SyncActivity context, MediaRepository repository) {
 
@@ -94,13 +95,30 @@ public class MediaSearchAsync extends AsyncTask<Void, Void, Void> {
 
       assert cursor != null;
       while (cursor.moveToNext()) {
+        ArtistEntity artistEntity = new ArtistEntity();
+        try {
+          artistEntity.ArtistId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID));
+          artistEntity.ArtistName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
+          mRepository.insertArtist(artistEntity);
+        } catch (Exception e) {
+          Log.e(TAG, "Failed to write artist entity.", e);
+        }
+
+        AlbumEntity albumEntity = new AlbumEntity();
+        try {
+          albumEntity.AlbumId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
+          albumEntity.AlbumName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM));
+          albumEntity.ArtistId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID));
+          mRepository.insertAlbum(albumEntity);
+        } catch (Exception e) {
+          Log.e(TAG, "Failed to write album entity.", e);
+        }
+
         MediaEntity mediaEntity = new MediaEntity();
         try {
-          mediaEntity.Id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
+          mediaEntity.MediaId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
           mediaEntity.AlbumId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
-          mediaEntity.AlbumName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM));
           mediaEntity.ArtistId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID));
-          mediaEntity.ArtistName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
           mediaEntity.IsAudiobook = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_AUDIOBOOK)) != 0;
           mediaEntity.IsExternal = contentSource.equals(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
           mediaEntity.IsMusic = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_MUSIC)) != 0;
@@ -123,13 +141,13 @@ public class MediaSearchAsync extends AsyncTask<Void, Void, Void> {
     File directory = cw.getDir(mWeakReference.get().getString(R.string.album), Context.MODE_PRIVATE);
     File destinationPath = new File(directory, mediaEntity.ArtistId + "-" + mediaEntity.AlbumId + ".jpg");
     try (FileOutputStream fos = new FileOutputStream(destinationPath)) {
-      Uri localSource = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "" + mediaEntity.Id);
+      Uri localSource = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "" + mediaEntity.MediaId);
       mWeakReference.get().getContentResolver().loadThumbnail(
         localSource,
         new Size(640, 480), null)
         .compress(Bitmap.CompressFormat.PNG, 100, fos);
     } catch (Exception e) {
-      Log.e(TAG, "Failed to save image", e);
+      Log.w(TAG, "Failed to save image: " + mediaEntity.MediaId);
     }
   }
 }

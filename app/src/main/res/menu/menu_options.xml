@@ -12,7 +12,7 @@
     <item
       android:id="@+id/action_option_favorite"
       android:icon="@drawable/ic_unfavorite_dark"
-      android:title="@string/favorite"
+      android:title="@string/add_to_favorites"
       app:showAsAction="ifRoom" />
     <item
       android:id="@+id/action_option_visible"
