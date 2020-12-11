@@ -44,8 +44,6 @@ public class MediaEntity {
 
   public boolean IsFavorite;
 
-  public boolean IsVisible;
-
   public boolean IsMusic;
 
   public boolean IsPodcast;
@@ -62,7 +60,6 @@ public class MediaEntity {
     IsAudiobook = false;
     IsExternal = false;
     IsFavorite = false;
-    IsVisible = true;
     IsMusic = false;
     IsPodcast = false;
     TrackNumber = 0;

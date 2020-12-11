@@ -19,6 +19,7 @@
     tools:ignore="GoogleAppIndexingWarning">
     <activity android:name="net.whollynugatory.streamytunes.android.ui.BaseActivity"/>
     <activity android:name="net.whollynugatory.streamytunes.android.ui.SyncActivity"/>
+    <activity android:name="net.whollynugatory.streamytunes.android.ui.PlayerActivity"/>
     <activity
       android:name="net.whollynugatory.streamytunes.android.ui.MainActivity"
       android:label="@string/app_name">

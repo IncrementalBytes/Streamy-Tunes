@@ -56,11 +56,6 @@ public class MediaViewModel extends AndroidViewModel {
     return mMediaRepository.getAllAudiobooks();
   }
 
-  public LiveData<List<MediaDetails>> getAllMusic() {
-
-    return mMediaRepository.getAllMusic();
-  }
-
   public LiveData<List<MediaDetails>> getAllMusicByAlbumId(long albumId) {
 
     return mMediaRepository.getAllMusicByAlbumId(albumId);

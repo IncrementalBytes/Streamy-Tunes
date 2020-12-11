@@ -15,7 +15,6 @@
  */
 package net.whollynugatory.streamytunes.android.ui;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -50,8 +49,7 @@ public class SyncActivity extends BaseActivity {
   public void mediaSearchComplete() {
 
     Log.d(TAG, "++mediaSearchComplete()");
-    Intent intent = new Intent(SyncActivity.this, MainActivity.class);
-    startActivity(intent);
+    setResult(RESULT_OK);
     finish();
   }
 }

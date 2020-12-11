@@ -22,8 +22,10 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.preference.EditTextPreference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.SwitchPreference;
 
 import net.whollynugatory.streamytunes.android.BuildConfig;
+import net.whollynugatory.streamytunes.android.PreferenceUtils;
 import net.whollynugatory.streamytunes.android.R;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
@@ -52,18 +54,32 @@ public class UserSettingsFragment extends PreferenceFragmentCompat {
 
     Log.d(TAG, "++onCreatePreferences(Bundle, String)");
     addPreferencesFromResource(R.xml.app_preferences);
-    setupAppVersionPreference();
-  }
-
-  /*
-    Private Method(s)
-   */
-  private void setupAppVersionPreference() {
-
-    Log.d(TAG, "++setupAppVersionPreference()");
+    setupShowHiddenPreference();
     EditTextPreference editTextPreference = findPreference(getString(R.string.pref_key_app_version));
     if (editTextPreference != null) {
       editTextPreference.setSummary(BuildConfig.VERSION_NAME);
     }
   }
+
+  /*
+    Private Method(s)
+   */
+   private void setupShowHiddenPreference() {
+
+     Log.d(TAG, "++setupShowHiddenPreference()");
+     SwitchPreference switchPreference = findPreference(getString(R.string.pref_key_show_hidden));
+     if (switchPreference != null) {
+       switchPreference.setChecked(PreferenceUtils.getShowHidden(getActivity()));
+       switchPreference.setOnPreferenceChangeListener(
+         (preference, newValue) -> {
+
+           Log.d(TAG, "++setupShowHiddenPreference::onPreferenceChange()");
+           PreferenceUtils.saveBooleanPreference(
+             getActivity(),
+             R.string.pref_key_show_hidden,
+             (boolean) newValue);
+           return true;
+         });
+     }
+   }
 }

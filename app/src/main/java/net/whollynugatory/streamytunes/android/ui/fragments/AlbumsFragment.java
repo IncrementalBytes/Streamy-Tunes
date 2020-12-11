@@ -165,13 +165,10 @@ public class AlbumsFragment extends Fragment {
         mAlbumTextView = itemView.findViewById(R.id.media_item_text_title);
         mArtistTextView = itemView.findViewById(R.id.media_item_text_subtitle);
         mSongsTextView = itemView.findViewById(R.id.media_item_text_details);
-
-        ImageView favoriteImage = itemView.findViewById(R.id.media_item_image_favorite);
-        favoriteImage.setVisibility(View.INVISIBLE);
-        ImageView playlistImage = itemView.findViewById(R.id.media_item_image_playlist);
-        playlistImage.setVisibility(View.INVISIBLE);
-        ImageView visibleImage = itemView.findViewById(R.id.media_item_image_visible);
-        visibleImage.setVisibility(View.INVISIBLE);
+        ImageView dragImage = itemView.findViewById(R.id.media_item_image_drag_bar);
+        dragImage.setVisibility(View.INVISIBLE);
+        ImageView optionsImage = itemView.findViewById(R.id.media_item_image_options);
+        optionsImage.setVisibility(View.INVISIBLE);
 
         itemView.setOnClickListener(this);
       }
@@ -187,7 +184,8 @@ public class AlbumsFragment extends Fragment {
           }
 
           mAlbumTextView.setText(mAlbum.AlbumName);
-          mSongsTextView.setText(String.format(getString(R.string.format_songs), mAlbum.SongCount));
+          String message = getResources().getQuantityString(R.plurals.format_songs, mAlbum.SongCount, mAlbum.SongCount);
+          mSongsTextView.setText(message);
           mArtistTextView.setText(mAlbum.ArtistName);
         }
       }

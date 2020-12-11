@@ -23,10 +23,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -54,7 +54,6 @@ public class MediaFragment extends Fragment {
     void onMediaAddToPlaylist(MediaEntity mediaEntity);
     void onMediaClicked(Collection<MediaDetails> mediaDetailsCollection);
     void onMediaUpdateFavorites(MediaEntity mediaEntity);
-    void onMediaUpdateVisible(MediaEntity mediaEntity);
   }
 
   private OnMediaListener mCallback;
@@ -231,8 +230,6 @@ public class MediaFragment extends Fragment {
       private final TextView mAlbumTextView;
       private final TextView mArtistTextView;
       private final TextView mTitleTextView;
-      private final ImageView mFavoriteImage;
-      private final ImageView mVisibleImage;
 
       private MediaDetails mMedia;
 
@@ -243,22 +240,45 @@ public class MediaFragment extends Fragment {
         mAlbumTextView = itemView.findViewById(R.id.media_item_text_details);
         mArtistTextView = itemView.findViewById(R.id.media_item_text_subtitle);
         mTitleTextView = itemView.findViewById(R.id.media_item_text_title);
+        ImageView dragImage = itemView.findViewById(R.id.media_item_image_drag_bar);
+        dragImage.setVisibility(View.INVISIBLE);
+
+        ImageView optionsImage = itemView.findViewById(R.id.media_item_image_options);
+        optionsImage.setOnClickListener(v -> {
+
+          PopupMenu optionsPopup = new PopupMenu(mContext, optionsImage);
+          optionsPopup.inflate(R.menu.menu_options);
+          if (mMedia.IsFavorite) {
+            optionsPopup.getMenu().findItem(R.id.action_option_favorite).setTitle(getString(R.string.remove_from_favorites));
+          }
+
+          optionsPopup.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+              case R.id.action_option_playlist:
+                Log.d(TAG, "Add to playlist " + mMedia.Title);
+                mCallback.onMediaAddToPlaylist(mMedia.toMediaEntity());
+                return true;
+              case R.id.action_option_favorite:
+                if (mMedia.IsFavorite) {
+                  Log.d(TAG, "Remove from favorites " + mMedia.Title);
+                  mMedia.IsFavorite = false;
+                } else {
+                  Log.d(TAG, "Add to favorites " + mMedia.Title);
+                  mMedia.IsFavorite = true;
+                }
+
+                mCallback.onMediaUpdateFavorites(mMedia.toMediaEntity());
+
+                return true;
+              default:
+                return false;
+            }
+          });
+
+          optionsPopup.show();
+        });
 
         itemView.setOnClickListener(this);
-        ImageView playlistImage = itemView.findViewById(R.id.media_item_image_playlist);
-        playlistImage.setOnClickListener(v -> mCallback.onMediaAddToPlaylist(mMedia.toMediaEntity()));
-
-        mFavoriteImage = itemView.findViewById(R.id.media_item_image_favorite);
-        mFavoriteImage.setOnClickListener(v -> {
-          mMedia.IsFavorite = !mMedia.IsFavorite;
-          mCallback.onMediaUpdateFavorites(mMedia.toMediaEntity());
-        });
-
-        mVisibleImage = itemView.findViewById(R.id.media_item_image_visible);
-        mVisibleImage.setOnClickListener(v -> {
-          mMedia.IsVisible = !mMedia.IsVisible;
-          mCallback.onMediaUpdateVisible(mMedia.toMediaEntity());
-        });
       }
 
       void bind(MediaDetails media) {
@@ -273,18 +293,6 @@ public class MediaFragment extends Fragment {
           mTitleTextView.setText(mMedia.Title);
           mAlbumTextView.setText(mMedia.AlbumName);
           mArtistTextView.setText(mMedia.ArtistName);
-
-          if (mMedia.IsFavorite) {
-            mFavoriteImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_favorite_dark, null));
-          } else {
-            mFavoriteImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_unfavorite_dark, null));
-          }
-
-          if (mMedia.IsVisible) {
-            mVisibleImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_visible_dark, null));
-          } else {
-            mVisibleImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_hide_dark, null));
-          }
         }
       }
 

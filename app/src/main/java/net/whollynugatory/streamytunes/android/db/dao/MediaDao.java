@@ -19,6 +19,7 @@ import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
@@ -46,19 +47,15 @@ public interface MediaDao {
   @Query("SELECT * FROM ArtistsView")
   LiveData<List<ArtistsView>> getAllArtists();
 
-//  @Transaction
   @Query("SELECT * FROM media_table WHERE IsAudiobook == 1")
   LiveData<List<MediaDetails>> getAllAudiobooks();
 
-//  @Transaction
   @Query("SELECT * FROM media_table WHERE IsMusic == 1")
   LiveData<List<MediaDetails>> getAllMusic();
 
-//  @Transaction
   @Query("SELECT * FROM MediaDetails WHERE IsMusic == 1 AND AlbumId == :albumId")
   LiveData<List<MediaDetails>> getAllMusicByAlbumId(long albumId);
 
-//  @Transaction
   @Query("SELECT * FROM MediaDetails WHERE IsMusic == 1 AND ArtistId == :artistId")
   LiveData<List<MediaDetails>> getAllMusicByArtistId(long artistId);
 
@@ -68,14 +65,13 @@ public interface MediaDao {
   @Query("SELECT * FROM PlaylistsView")
   LiveData<List<PlaylistsView>> getAllPlaylists();
 
-//  @Transaction
   @Query("SELECT * FROM media_table WHERE IsPodcast == 1")
   LiveData<List<MediaDetails>> getAllPodcasts();
 
-  @Insert
+  @Insert(onConflict = OnConflictStrategy.IGNORE)
   void insertAlbum(AlbumEntity albumEntity);
 
-  @Insert
+  @Insert(onConflict = OnConflictStrategy.IGNORE)
   void insertArtist(ArtistEntity artistEntity);
 
   @Insert

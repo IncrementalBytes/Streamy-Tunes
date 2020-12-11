@@ -52,7 +52,7 @@ public class MediaSearchAsync extends AsyncTask<Void, Void, Void> {
   @Override
   protected Void doInBackground(final Void... params) {
 
-    getContent(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
+    getContent();
     return null;
   }
 
@@ -68,7 +68,7 @@ public class MediaSearchAsync extends AsyncTask<Void, Void, Void> {
     activity.mediaSearchComplete();
   }
 
-  private void getContent(Uri contentSource) {
+  private void getContent() {
 
     Log.d(TAG, "++getContent(Uri)");
     String sortOrder = MediaStore.Audio.Media.YEAR + " DESC";
@@ -87,7 +87,7 @@ public class MediaSearchAsync extends AsyncTask<Void, Void, Void> {
     };
 
     try (Cursor cursor = mWeakReference.get().getContentResolver().query(
-      contentSource,
+      MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
       projection,
       null,
       null,
@@ -101,7 +101,7 @@ public class MediaSearchAsync extends AsyncTask<Void, Void, Void> {
           artistEntity.ArtistName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
           mRepository.insertArtist(artistEntity);
         } catch (Exception e) {
-          Log.e(TAG, "Failed to write artist entity.", e);
+          Log.e(TAG, "Failed to write artist entity: " + artistEntity.toString(), e);
         }
 
         AlbumEntity albumEntity = new AlbumEntity();
@@ -111,7 +111,7 @@ public class MediaSearchAsync extends AsyncTask<Void, Void, Void> {
           albumEntity.ArtistId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID));
           mRepository.insertAlbum(albumEntity);
         } catch (Exception e) {
-          Log.e(TAG, "Failed to write album entity.", e);
+          Log.e(TAG, "Failed to write album entity: " + albumEntity.toString(), e);
         }
 
         MediaEntity mediaEntity = new MediaEntity();
@@ -120,7 +120,7 @@ public class MediaSearchAsync extends AsyncTask<Void, Void, Void> {
           mediaEntity.AlbumId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
           mediaEntity.ArtistId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID));
           mediaEntity.IsAudiobook = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_AUDIOBOOK)) != 0;
-          mediaEntity.IsExternal = contentSource.equals(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
+          mediaEntity.IsExternal = true; // TODO: update if support for internal is implemented
           mediaEntity.IsMusic = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_MUSIC)) != 0;
           mediaEntity.IsPodcast = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_PODCAST)) != 0;
           mediaEntity.Title = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));

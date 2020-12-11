@@ -29,7 +29,6 @@ import java.io.Serializable;
     "Artists.ArtistId, " +
     "Artists.ArtistName, " +
     "Media.IsFavorite, " +
-    "Media.IsVisible," +
     "Playlists.PlaylistName, " +
     "Playlists.PlaylistId, " +
     "Playlists.AddedTimeStamp " +
@@ -47,7 +46,6 @@ public class PlaylistDetails implements Serializable {
   public long ArtistId;
   public String ArtistName;
   public boolean IsFavorite;
-  public boolean IsVisible;
   public String PlaylistName;
   public String PlaylistId;
   public long AddedTimeStamp;
@@ -61,7 +59,6 @@ public class PlaylistDetails implements Serializable {
     ArtistId = BaseActivity.UNKNOWN_ID;
     ArtistName = BaseActivity.UNKNOWN_STRING;
     IsFavorite = false;
-    IsVisible = true;
     PlaylistName = BaseActivity.UNKNOWN_STRING;
     PlaylistId = BaseActivity.UNKNOWN_GUID;
     AddedTimeStamp = 0;
@@ -77,7 +74,6 @@ public class PlaylistDetails implements Serializable {
     mediaDetails.ArtistId = ArtistId;
     mediaDetails.ArtistName = ArtistName;
     mediaDetails.IsFavorite = IsFavorite;
-    mediaDetails.IsVisible = IsVisible;
     return mediaDetails;
   }
 }

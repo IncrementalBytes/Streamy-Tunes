@@ -149,9 +149,7 @@ public class PlaylistFragment extends Fragment {
      */
     class PlaylistHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-      private final ImageView mImage;
       private final TextView mPlaylistTextView;
-      private final TextView mArtistTextView;
       private final TextView mSongsTextView;
 
       private PlaylistsView mPlaylist;
@@ -159,18 +157,14 @@ public class PlaylistFragment extends Fragment {
       PlaylistHolder(View itemView) {
         super(itemView);
 
-        mImage = itemView.findViewById(R.id.media_item_image);
         mPlaylistTextView = itemView.findViewById(R.id.media_item_text_title);
-        mArtistTextView = itemView.findViewById(R.id.media_item_text_subtitle);
-        mArtistTextView.setVisibility(View.INVISIBLE);
+        TextView artistTextView = itemView.findViewById(R.id.media_item_text_subtitle);
+        artistTextView.setVisibility(View.INVISIBLE);
         mSongsTextView = itemView.findViewById(R.id.media_item_text_details);
-
-        ImageView favoriteImage = itemView.findViewById(R.id.media_item_image_favorite);
-        favoriteImage.setVisibility(View.INVISIBLE);
-        ImageView playlistImage = itemView.findViewById(R.id.media_item_image_playlist);
-        playlistImage.setVisibility(View.INVISIBLE);
-        ImageView visibleImage = itemView.findViewById(R.id.media_item_image_visible);
-        visibleImage.setVisibility(View.INVISIBLE);
+        ImageView dragImage = itemView.findViewById(R.id.media_item_image_drag_bar);
+        // TODO: handle drag image logic
+        ImageView optionsImage = itemView.findViewById(R.id.media_item_image_options);
+        optionsImage.setVisibility(View.INVISIBLE);
 
         itemView.setOnClickListener(this);
       }
@@ -181,7 +175,7 @@ public class PlaylistFragment extends Fragment {
 
         if (mPlaylist != null) {
           mPlaylistTextView.setText(mPlaylist.PlaylistName);
-          mSongsTextView.setText(String.format(getString(R.string.format_songs), mPlaylist.SongCount));
+          mSongsTextView.setText(getResources().getQuantityString(R.plurals.format_songs, mPlaylist.SongCount, mPlaylist.SongCount));
         }
       }
 

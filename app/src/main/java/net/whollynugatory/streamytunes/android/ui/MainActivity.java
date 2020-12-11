@@ -44,7 +44,6 @@ import net.whollynugatory.streamytunes.android.db.entity.PlaylistEntity;
 import net.whollynugatory.streamytunes.android.db.repository.MediaRepository;
 import net.whollynugatory.streamytunes.android.ui.fragments.AlbumsFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.ArtistsFragment;
-import net.whollynugatory.streamytunes.android.ui.fragments.PlayerFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.MediaFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.PlaylistFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.SummaryFragment;
@@ -57,7 +56,6 @@ public class MainActivity extends BaseActivity implements
   AlbumsFragment.OnAlbumListener,
   ArtistsFragment.OnArtistListener,
   MediaFragment.OnMediaListener,
-  PlayerFragment.OnPlayerListener,
   PlaylistFragment.OnPlaylistListener,
   SummaryFragment.OnSummaryListener {
 
@@ -68,9 +66,14 @@ public class MainActivity extends BaseActivity implements
     super.onActivityResult(requestCode, resultCode, data);
 
     Log.d(TAG, "++onActivityResult(int, int, Intent)");
-    if (requestCode == BaseActivity.REQUEST_SYNC) {
-      if (resultCode != RESULT_OK) {
+    switch (requestCode) {
+      case BaseActivity.REQUEST_SYNC:
+      case BaseActivity.REQUEST_PLAYER:
+      if (resultCode == RESULT_OK) {
+        Log.d(TAG, "Result OK from other activity.");
       }
+
+      break;
     }
   }
 
@@ -151,9 +154,8 @@ public class MainActivity extends BaseActivity implements
       replaceFragment(UserSettingsFragment.newInstance());
     } else if (item.getItemId() == R.id.action_main_sync) {
       // TODO: hide bottom navigation
-      Intent intent = new Intent(MainActivity.this, SyncActivity.class);
-      startActivity(intent);
-      finish();
+      Intent intent = new Intent(this, SyncActivity.class);
+      startActivityForResult(intent, BaseActivity.REQUEST_SYNC);
     }
 
     return super.onOptionsItemSelected(item);
@@ -192,14 +194,17 @@ public class MainActivity extends BaseActivity implements
     Snackbar.make(
       findViewById(R.id.main_fragment_container),
       getString(R.string.not_yet_implemented),
-      Snackbar.LENGTH_LONG).show();
+      Snackbar.LENGTH_SHORT).show();
   }
 
   @Override
   public void onMediaClicked(Collection<MediaDetails> mediaDetailsCollection) {
 
     Log.d(TAG, "++onMediaClicked(Collection<MediaDetails>)");
-    replaceFragment(PlayerFragment.newInstance(new ArrayList<>(mediaDetailsCollection)));
+//    replaceFragment(PlayerFragment.newInstance(new ArrayList<>(mediaDetailsCollection)));
+    Intent intent = new Intent(this, PlayerActivity.class);
+    intent.putExtra(BaseActivity.ARG_MEDIA_DETAILS_LIST, new ArrayList<>(mediaDetailsCollection));
+    startActivityForResult(intent, BaseActivity.REQUEST_PLAYER);
   }
 
   @Override
@@ -216,26 +221,34 @@ public class MainActivity extends BaseActivity implements
       playlistEntity,
       mediaEntity.IsFavorite).execute();
     updateRowAsync(mediaEntity);
-  }
-
-  @Override
-  public void onMediaUpdateVisible(MediaEntity mediaEntity) {
-
-    Log.d(TAG, "++onMediaUpdateVisible(MediaEntity)");
-    updateRowAsync(mediaEntity);
-  }
-
-  @Override
-  public void onPlayerSongComplete() {
-
-    Log.d(TAG, "++onPlayerSongComplete()");
+    Snackbar.make(
+      findViewById(R.id.main_fragment_container),
+      mediaEntity.IsFavorite ? getString(R.string.adding_to_favorites) : getString(R.string.removing_from_favorites),
+      Snackbar.LENGTH_SHORT).show();
   }
 
   @Override
   public void onPlaylistClicked(String playlistId) {
 
     Log.d(TAG, "++onPlaylistClicked(String)");
-    replaceFragment(MediaFragment.newInstanceByPlaylist(playlistId));
+    //replaceFragment(MediaFragment.newInstanceByPlaylist(playlistId));
+  }
+
+  @Override
+  public void onQueryComplete(int mediaFound) {
+
+    Log.d(TAG, "++onQueryComplete(int)");
+    if (mediaFound == 0) {
+      Snackbar.make(
+        findViewById(R.id.main_fragment_container),
+        getString(R.string.no_media_found),
+        Snackbar.LENGTH_LONG)
+        .setAction(R.string.sync, v -> {
+          Intent intent = new Intent(MainActivity.this, SyncActivity.class);
+          startActivity(intent);
+          finish();
+        }).show();
+    }
   }
 
   @Override

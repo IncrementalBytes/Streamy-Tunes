@@ -22,24 +22,22 @@ import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 import java.io.Serializable;
 
 @DatabaseView(
-  "SELECT DISTINCT Artists.ArtistId, " +
-  "Artists.ArtistName, " +
-  "(SELECT COUNT(*) FROM albums_table AS Albums WHERE Albums.ArtistId = Artists.ArtistId) AS AlbumCount, " +
-  "(SELECT COUNT(*) FROM media_table AS Media WHERE Media.ArtistId = Artists.ArtistId) AS SongCount " +
-  "FROM artists_table AS Artists " +
-  "GROUP BY Artists.ArtistId")
+  "SELECT Artists.ArtistName," +
+    "Artists.ArtistId," +
+    "COUNT(*) AS SongCount  " +
+    "FROM media_table AS Media " +
+    "JOIN artists_table AS Artists ON Artists.ArtistId = Media.ArtistId " +
+    "GROUP BY Artists.ArtistId")
 public class ArtistsView implements Serializable {
 
   public long ArtistId;
   public String ArtistName;
-  public int AlbumCount;
   public int SongCount;
 
   public ArtistsView() {
 
     ArtistId = BaseActivity.UNKNOWN_ID;
     ArtistName = BaseActivity.UNKNOWN_STRING;
-    AlbumCount = 0;
     SongCount = 0;
   }
 }

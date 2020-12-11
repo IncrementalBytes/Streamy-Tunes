@@ -28,8 +28,8 @@ import java.io.Serializable;
     "Artists.ArtistName, " +
     "COUNT(Media.MediaId) AS SongCount " +
     "FROM albums_table AS Albums " +
-    "INNER JOIN artists_table AS Artists ON Artists.ArtistId = Albums.ArtistId " +
-    "INNER JOIN media_table AS Media ON Media.AlbumId = Albums.AlbumId " +
+    "JOIN artists_table AS Artists ON Artists.ArtistId = Albums.ArtistId " +
+    "JOIN media_table AS Media ON Media.AlbumId = Albums.AlbumId " +
     "GROUP BY Albums.AlbumId")
 public class AlbumsView implements Serializable {
 

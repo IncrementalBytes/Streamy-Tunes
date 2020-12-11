@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+<!--  <androidx.preference.PreferenceCategory android:title="@string/pref_category_options">-->
+<!--    <androidx.preference.SwitchPreference-->
+<!--      android:key="@string/pref_key_show_hidden"-->
+<!--      android:singleLine="true"-->
+<!--      android:title="@string/pref_title_show_hidden"-->
+<!--      android:summary=""/>-->
+<!--  </androidx.preference.PreferenceCategory>-->
+
   <androidx.preference.PreferenceCategory android:title="@string/pref_category_about">
     <androidx.preference.EditTextPreference
       android:key="@string/pref_key_app_version"

@@ -14,11 +14,11 @@
       android:icon="@drawable/ic_unfavorite_dark"
       android:title="@string/add_to_favorites"
       app:showAsAction="ifRoom" />
-    <item
-      android:id="@+id/action_option_visible"
-      android:icon="@drawable/ic_visible_dark"
-      android:title="@string/hide"
-      app:showAsAction="ifRoom" />
+<!--    <item-->
+<!--      android:id="@+id/action_option_visible"-->
+<!--      android:icon="@drawable/ic_visible_dark"-->
+<!--      android:title="@string/hide"-->
+<!--      app:showAsAction="ifRoom" />-->
   </group>
 
 </menu>

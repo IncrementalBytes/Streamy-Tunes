@@ -32,14 +32,13 @@ import java.io.Serializable;
     "Media.IsAudiobook, " +
     "Media.IsExternal, " +
     "Media.IsFavorite, " +
-    "Media.IsVisible, " +
     "Media.IsMusic, " +
     "Media.IsPodcast, " +
     "Media.TrackNumber, " +
     "Media.Year " +
     "FROM media_table AS Media " +
-    "INNER JOIN albums_table AS Albums ON Albums.AlbumId = Media.AlbumId " +
-    "INNER JOIN artists_table AS Artists ON Artists.ArtistId = Media.ArtistId")
+    "JOIN albums_table AS Albums ON Albums.AlbumId = Media.AlbumId " +
+    "JOIN artists_table AS Artists ON Artists.ArtistId = Media.ArtistId")
 public class MediaDetails implements Serializable {
 
   public long MediaId;
@@ -53,7 +52,6 @@ public class MediaDetails implements Serializable {
   public boolean IsFavorite;
   public boolean IsMusic;
   public boolean IsPodcast;
-  public boolean IsVisible;
   public int TrackNumber;
   public int Year;
 
@@ -70,7 +68,6 @@ public class MediaDetails implements Serializable {
     IsFavorite = false;
     IsMusic = false;
     IsPodcast = false;
-    IsVisible = true;
     TrackNumber = BaseActivity.UNKNOWN_ID;
     Year = BaseActivity.UNKNOWN_ID;
   }
@@ -87,7 +84,6 @@ public class MediaDetails implements Serializable {
     mediaEntity.IsFavorite = IsFavorite;
     mediaEntity.IsMusic = IsMusic;
     mediaEntity.IsPodcast = IsPodcast;
-    mediaEntity.IsVisible = IsVisible;
     mediaEntity.TrackNumber = TrackNumber;
     mediaEntity.Year = Year;
     return mediaEntity;

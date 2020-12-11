@@ -22,6 +22,8 @@ import androidx.room.PrimaryKey;
 
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
+import java.util.Locale;
+
 @Entity(tableName = AlbumEntity.TABLE_NAME)
 public class AlbumEntity {
 
@@ -41,5 +43,12 @@ public class AlbumEntity {
     AlbumId = BaseActivity.UNKNOWN_ID;
     AlbumName = BaseActivity.UNKNOWN_STRING;
     ArtistId = BaseActivity.UNKNOWN_ID;
+  }
+
+  @NonNull
+  @Override
+  public String toString() {
+
+    return String.format(Locale.US, "%s [%d]", AlbumName, AlbumId);
   }
 }

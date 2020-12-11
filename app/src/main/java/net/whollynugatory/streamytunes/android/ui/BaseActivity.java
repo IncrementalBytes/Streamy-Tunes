@@ -26,6 +26,7 @@ public class BaseActivity extends AppCompatActivity {
   public static final String UNKNOWN_GUID = "00000000-0000-0000-0000-0000000000000";
 
   public static final int REQUEST_SYNC = 1001;
+  public static final int REQUEST_PLAYER = 1002;
 
   public static final String ARG_ALBUM_ID = "album_id";
   public static final String ARG_ARTIST_ID = "artist_id";

@@ -38,6 +38,11 @@ public class PreferenceUtils {
     return getBooleanPref(context, R.string.pref_key_is_podcast);
   }
 
+  public static boolean getShowHidden(Context context) {
+
+    return getBooleanPref(context, R.string.pref_key_show_hidden);
+  }
+
   public static void saveBooleanPreference(Context context, @StringRes int prefKeyId, boolean value) {
 
     PreferenceManager.getDefaultSharedPreferences(context)
@@ -73,6 +78,14 @@ public class PreferenceUtils {
       .putBoolean(context.getString(R.string.pref_key_is_audiobook), false)
       .putBoolean(context.getString(R.string.pref_key_is_music), false)
       .putBoolean(context.getString(R.string.pref_key_is_podcast), true)
+      .apply();
+  }
+
+  public static void setShowHidden(Context context, boolean hiddenValue) {
+
+    PreferenceManager.getDefaultSharedPreferences(context)
+      .edit()
+      .putBoolean(context.getString(R.string.pref_key_show_hidden), hiddenValue)
       .apply();
   }
 
