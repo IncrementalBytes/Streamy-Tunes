@@ -39,4 +39,6 @@ public class BaseActivity extends AppCompatActivity {
   public static final String DEFAULT_PLAYLIST_FAVORITES = "Favorites";
 
   public static final int REQUEST_STORAGE_PERMISSIONS = 2001;
+
+  public static final String BROADCAST_PLAY_NEW_AUDIO = "net.whollynugatory.streamytunes.android.PlayNewAudio";
 }

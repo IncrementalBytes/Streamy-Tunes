@@ -3,10 +3,12 @@
   xmlns:tools="http://schemas.android.com/tools"
   package="net.whollynugatory.streamytunes.android">
 
-  <uses-permission android:name="android.permission.INTERNET" />
-  <uses-permission android:name="android.permission.WAKE_LOCK" />
-  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+  <permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
   <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION"/>
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+  <uses-permission android:name="android.permission.WAKE_LOCK" />
 
   <application
     android:allowBackup="true"
@@ -16,21 +18,29 @@
     android:supportsRtl="true"
     android:theme="@style/AppTheme"
     android:fullBackupContent="@xml/backup_descriptor"
-    tools:ignore="GoogleAppIndexingWarning">
+    tools:ignore="GoogleAppIndexingWarning"
+    android:requestLegacyExternalStorage="true">
     <activity android:name="net.whollynugatory.streamytunes.android.ui.BaseActivity"/>
     <activity android:name="net.whollynugatory.streamytunes.android.ui.SyncActivity"/>
-    <activity android:name="net.whollynugatory.streamytunes.android.ui.PlayerActivity"/>
-    <activity
-      android:name="net.whollynugatory.streamytunes.android.ui.MainActivity"
-      android:label="@string/app_name">
+    <activity android:name="net.whollynugatory.streamytunes.android.ui.PlayerActivity" android:label="@string/app_name">
       <meta-data
         android:name="android.support.PARENT_ACTIVITY"
-        android:value="net.whollynugatory.streamytunes.android.ui.MainActivity"/>
-        <intent-filter>
-          <action android:name="android.intent.action.MAIN" />
-          <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
+        android:value="net.whollynugatory.streamytunes.android.ui.PlayerActivity"/>
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
     </activity>
+    <activity android:name="net.whollynugatory.streamytunes.android.ui.MainActivity" android:label="@string/app_name">
+<!--      <meta-data-->
+<!--        android:name="android.support.PARENT_ACTIVITY"-->
+<!--        android:value="net.whollynugatory.streamytunes.android.ui.MainActivity"/>-->
+<!--        <intent-filter>-->
+<!--          <action android:name="android.intent.action.MAIN" />-->
+<!--          <category android:name="android.intent.category.LAUNCHER" />-->
+<!--        </intent-filter>-->
+    </activity>
+    <service android:name=".MediaPlayerService" />
   </application>
 
 </manifest>

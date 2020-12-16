@@ -21,7 +21,44 @@ import android.content.SharedPreferences;
 import androidx.annotation.StringRes;
 import androidx.preference.PreferenceManager;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import net.whollynugatory.streamytunes.android.db.entity.AudioEntity;
+
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+
 public class PreferenceUtils {
+
+  public static void clearCachedAudioList(Context context) {
+
+    SharedPreferences sharedPreferences = context.getSharedPreferences(context.getString(R.string.pref_key_audio_list), Context.MODE_PRIVATE);
+    sharedPreferences.edit().clear().apply();
+  }
+
+  /**
+   *
+   * @param context Current application context
+   * @return Returns -1 if no data found
+   */
+  public static int getAudioIndex(Context context) {
+
+    return getIntPref(context, R.string.pref_key_audio_index);
+  }
+
+  /**
+   *
+   * @param context Current application context
+   * @return Returns empty list if no data found
+   */
+  public static ArrayList<AudioEntity> getAudioList(Context context) {
+
+    Gson gson = new Gson();
+    String json = getStringPref(context, R.string.pref_key_audio_list);
+    Type type = new TypeToken<ArrayList<AudioEntity>>() { }.getType();
+    return gson.fromJson(json, type);
+  }
 
   public static boolean getIsAudiobook(Context context) {
 
@@ -48,6 +85,24 @@ public class PreferenceUtils {
     PreferenceManager.getDefaultSharedPreferences(context)
       .edit()
       .putBoolean(context.getString(prefKeyId), value)
+      .apply();
+  }
+
+  public static void setAudioList(Context context, ArrayList<AudioEntity> arrayList) {
+
+    Gson gson = new Gson();
+    String json = gson.toJson(arrayList);
+    PreferenceManager.getDefaultSharedPreferences(context)
+      .edit()
+      .putString(context.getString(R.string.pref_key_audio_list), json)
+      .apply();
+  }
+
+  public static void setAudioIndex(Context context, int index) {
+
+    PreferenceManager.getDefaultSharedPreferences(context)
+      .edit()
+      .putInt(context.getString(R.string.pref_key_audio_index), index)
       .apply();
   }
 
@@ -97,5 +152,19 @@ public class PreferenceUtils {
     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     String prefKey = context.getString(prefKeyId);
     return sharedPreferences.getBoolean(prefKey, false);
+  }
+
+  private static int getIntPref(Context context, @StringRes int prefKeyId) {
+
+    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+    String prefKey = context.getString(prefKeyId);
+    return sharedPreferences.getInt(prefKey, -1);
+  }
+
+  private static String getStringPref(Context context, @StringRes int prefKeyId) {
+
+    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+    String prefKey = context.getString(prefKeyId);
+    return sharedPreferences.getString(prefKey, "");
   }
 }
