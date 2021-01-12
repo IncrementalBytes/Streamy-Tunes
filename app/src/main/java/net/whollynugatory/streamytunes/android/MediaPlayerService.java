@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Ryan Ward
+ * Copyright 2021 Ryan Ward
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -29,9 +29,12 @@ import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.session.MediaSessionManager;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.os.RemoteException;
+import android.provider.MediaStore;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -43,8 +46,9 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.media.AudioFocusRequestCompat;
 import androidx.media.AudioManagerCompat;
+import androidx.media.session.MediaButtonReceiver;
 
-import net.whollynugatory.streamytunes.android.db.entity.AudioEntity;
+import net.whollynugatory.streamytunes.android.db.MediaDetails;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.io.IOException;
@@ -61,24 +65,17 @@ public class MediaPlayerService extends Service implements
 
   private final static String TAG = BaseActivity.BASE_TAG + MediaPlayerService.class.getSimpleName();
 
-  private final static String AUDIO_PLAYER_TAG = "AudioPlayer";
-  private final static String CHANNEL_ID = "NOTIFICATION_CHANNEL_ID";
-  private final static int NOTIFICATION_ID = 101;
+  private final static String AUDIO_PLAYER_TAG = "PlayerService";
+  private final static String CHANNEL_ID = "my_channel_01";
+  private final static int NOTIFICATION_ID = 1;
 
-  public static final String ACTION_PLAY = "net.whollynugatory.streamytunes.android.ACTION_PLAY";
-  public static final String ACTION_PAUSE = "net.whollynugatory.streamytunes.android.ACTION_PAUSE";
-  public static final String ACTION_PREVIOUS = "net.whollynugatory.streamytunes.android.ACTION_PREVIOUS";
-  public static final String ACTION_NEXT = "net.whollynugatory.streamytunes.android.ACTION_NEXT";
-  public static final String ACTION_STOP = "net.whollynugatory.streamytunes.android.ACTION_STOP";
-
-  private AudioEntity mActiveAudioEntity;
+  private MediaDetails mActiveMediaDetails;
   private int mAudioIndex = -1;
-  private ArrayList<AudioEntity> mAudioList;
+  private ArrayList<MediaDetails> mAudioList;
   private AudioManager mAudioManager;
-  private String mMediaFile;
   private MediaPlayer mMediaPlayer;
   private MediaSessionManager mMediaSessionManager;
-  private MediaSessionCompat mMediaSession;
+  private MediaSessionCompat mMediaSessionCompat;
   private boolean mOngoingCall = false;
   private PhoneStateListener mPhoneStateListener;
   private int mResumePosition;
@@ -101,7 +98,7 @@ public class MediaPlayerService extends Service implements
 
       mAudioIndex = PreferenceUtils.getAudioIndex(getApplicationContext());
       if (mAudioIndex != -1 && mAudioIndex < mAudioList.size()) {
-        mActiveAudioEntity = mAudioList.get(mAudioIndex);
+        mActiveMediaDetails = mAudioList.get(mAudioIndex);
       } else {
         stopSelf();
       }
@@ -155,6 +152,10 @@ public class MediaPlayerService extends Service implements
     if (mMediaPlayer != null) {
       stopMedia();
       mMediaPlayer.release();
+    }
+
+    if (mMediaSessionCompat != null) {
+      mMediaSessionCompat.release();
     }
 
     if (!removeAudioFocus()) {
@@ -256,7 +257,7 @@ public class MediaPlayerService extends Service implements
       mAudioList = PreferenceUtils.getAudioList(getApplicationContext());
       mAudioIndex = PreferenceUtils.getAudioIndex(getApplicationContext());
       if (mAudioIndex != -1 && mAudioIndex < mAudioList.size()) {
-        mActiveAudioEntity = mAudioList.get(mAudioIndex);
+        mActiveMediaDetails = mAudioList.get(mAudioIndex);
       } else {
         stopSelf();
       }
@@ -280,7 +281,13 @@ public class MediaPlayerService extends Service implements
       buildNotification(PlaybackStatus.PLAYING);
     }
 
-    handleIncomingActions(intent);
+    if (mMediaSessionCompat != null) {
+      MediaButtonReceiver.handleIntent(mMediaSessionCompat, intent);
+    } else {
+      Log.w(TAG, "MediaSession was null, defaulting to handleIncomingActions");
+      handleIncomingActions(intent);
+    }
+
     return super.onStartCommand(intent, flags, startId);
   }
 
@@ -289,6 +296,7 @@ public class MediaPlayerService extends Service implements
    */
   private void buildNotification(PlaybackStatus playbackStatus) {
 
+    Log.d(TAG, "++buildNotification(PlaybackStatus)");
     int notificationAction = android.R.drawable.ic_media_pause;
     PendingIntent play_pauseAction = null;
 
@@ -304,14 +312,16 @@ public class MediaPlayerService extends Service implements
     NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
       .setShowWhen(false)
       .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
-        .setMediaSession(mMediaSession.getSessionToken())
+        .setMediaSession(mMediaSessionCompat.getSessionToken())
         .setShowActionsInCompactView(0, 1, 2))
       .setColor(ResourcesCompat.getColor(getResources(), R.color.colorPrimary, null))
       .setLargeIcon(largeIcon)
       .setSmallIcon(android.R.drawable.stat_sys_headset)
-      .setContentText(mActiveAudioEntity.getArtist())
-      .setContentTitle(mActiveAudioEntity.getAlbum())
-      .setContentInfo(mActiveAudioEntity.getTitle())
+      .setContentText(mActiveMediaDetails.ArtistName)
+      .setContentTitle(mActiveMediaDetails.AlbumName)
+      .setContentInfo(mActiveMediaDetails.Title)
+      .setOngoing(true)
+      .setChannelId(CHANNEL_ID)
       .addAction(android.R.drawable.ic_media_previous, "previous", playbackAction(3))
       .addAction(notificationAction, "pause", play_pauseAction)
       .addAction(android.R.drawable.ic_media_next, "next", playbackAction(2));
@@ -360,16 +370,14 @@ public class MediaPlayerService extends Service implements
     }
 
     String actionString = playbackAction.getAction();
-    if (actionString.equalsIgnoreCase(ACTION_PLAY)) {
+    if (actionString.equalsIgnoreCase(BaseActivity.ACTION_PLAY)) {
       mTransportControls.play();
-    } else if (actionString.equalsIgnoreCase(ACTION_PAUSE)) {
+    } else if (actionString.equalsIgnoreCase(BaseActivity.ACTION_PAUSE)) {
       mTransportControls.pause();
-    } else if (actionString.equalsIgnoreCase(ACTION_NEXT)) {
+    } else if (actionString.equalsIgnoreCase(BaseActivity.ACTION_NEXT)) {
       mTransportControls.skipToNext();
-    } else if (actionString.equalsIgnoreCase(ACTION_PREVIOUS)) {
+    } else if (actionString.equalsIgnoreCase(BaseActivity.ACTION_PREVIOUS)) {
       mTransportControls.skipToPrevious();
-    } else if (actionString.equalsIgnoreCase(ACTION_STOP)) {
-      mTransportControls.stop();
     }
   }
 
@@ -383,6 +391,7 @@ public class MediaPlayerService extends Service implements
     mMediaPlayer.setOnBufferingUpdateListener(this);
     mMediaPlayer.setOnSeekCompleteListener(this);
     mMediaPlayer.setOnInfoListener(this);
+    mMediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
     mMediaPlayer.reset();
     mMediaPlayer.setAudioAttributes(
       new AudioAttributes
@@ -390,7 +399,10 @@ public class MediaPlayerService extends Service implements
         .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
         .build());
     try {
-      mMediaPlayer.setDataSource(mActiveAudioEntity.getData());
+      mMediaPlayer.setDataSource(
+        getApplicationContext(),
+        Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "" + mActiveMediaDetails.MediaId));
+      Log.d(TAG, "Setting to active source: " + mActiveMediaDetails.toString());
     } catch (IOException e) {
       e.printStackTrace();
       stopSelf();
@@ -407,18 +419,25 @@ public class MediaPlayerService extends Service implements
     }
 
     mMediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
-    mMediaSession = new MediaSessionCompat(getApplicationContext(), AUDIO_PLAYER_TAG);
-    mTransportControls = mMediaSession.getController().getTransportControls();
-    mMediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
-    mMediaSession.setActive(true);
+    mMediaSessionCompat = new MediaSessionCompat(getApplicationContext(), AUDIO_PLAYER_TAG);
+    mTransportControls = mMediaSessionCompat.getController().getTransportControls();
+    mMediaSessionCompat.setActive(true);
     updateMetaData();
 
-    mMediaSession.setCallback(new MediaSessionCompat.Callback() {
+    mMediaSessionCompat.setCallback(new MediaSessionCompat.Callback() {
+
+      @Override
+      public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
+
+        Log.d(TAG, "++onMediaButtonEvent(Intent)");
+        return super.onMediaButtonEvent(mediaButtonEvent);
+      }
 
       @Override
       public void onPlay() {
         super.onPlay();
 
+        Log.d(TAG, "++onPlay()");
         resumeMedia();
         buildNotification(PlaybackStatus.PLAYING);
       }
@@ -427,6 +446,7 @@ public class MediaPlayerService extends Service implements
       public void onPause() {
         super.onPause();
 
+        Log.d(TAG, "++onPause()");
         pauseMedia();
         buildNotification(PlaybackStatus.PAUSED);
       }
@@ -435,6 +455,7 @@ public class MediaPlayerService extends Service implements
       public void onSkipToNext() {
         super.onSkipToNext();
 
+        Log.d(TAG, "++onSkipToNext()");
         skipToNext();
         updateMetaData();
         buildNotification(PlaybackStatus.PLAYING);
@@ -444,6 +465,7 @@ public class MediaPlayerService extends Service implements
       public void onSkipToPrevious() {
         super.onSkipToPrevious();
 
+        Log.d(TAG, "++onSkipToPrevious()");
         skipToPrevious();
         updateMetaData();
         buildNotification(PlaybackStatus.PLAYING);
@@ -453,6 +475,7 @@ public class MediaPlayerService extends Service implements
       public void onStop() {
         super.onStop();
 
+        Log.d(TAG, "++onStop()");
         removeNotification();
         stopSelf();
       }
@@ -460,6 +483,8 @@ public class MediaPlayerService extends Service implements
       @Override
       public void onSeekTo(long position) {
         super.onSeekTo(position);
+
+        Log.d(TAG, "++onSeekTo()");
       }
     });
   }
@@ -470,21 +495,22 @@ public class MediaPlayerService extends Service implements
     Intent playbackAction = new Intent(this, MediaPlayerService.class);
     switch (actionNumber) {
       case 0:
-        playbackAction.setAction(ACTION_PLAY);
+        playbackAction.setAction(BaseActivity.ACTION_PLAY);
         return PendingIntent.getService(this, actionNumber, playbackAction, 0);
       case 1:
-        playbackAction.setAction(ACTION_PAUSE);
+        playbackAction.setAction(BaseActivity.ACTION_PAUSE);
         return PendingIntent.getService(this, actionNumber, playbackAction, 0);
       case 2:
-        playbackAction.setAction(ACTION_NEXT);
+        playbackAction.setAction(BaseActivity.ACTION_NEXT);
         return PendingIntent.getService(this, actionNumber, playbackAction, 0);
       case 3:
-        playbackAction.setAction(ACTION_PREVIOUS);
+        playbackAction.setAction(BaseActivity.ACTION_PREVIOUS);
         return PendingIntent.getService(this, actionNumber, playbackAction, 0);
       default:
         break;
     }
 
+    Log.w(TAG, "playbackAction will be null");
     return null;
   }
 
@@ -514,6 +540,7 @@ public class MediaPlayerService extends Service implements
 
   private void registerPlayNewAudio() {
 
+    Log.d(TAG, "++registerPlayNewAudio()");
     IntentFilter filter = new IntentFilter(BaseActivity.BROADCAST_PLAY_NEW_AUDIO);
     registerReceiver(PlayNewAudio, filter);
   }
@@ -569,9 +596,9 @@ public class MediaPlayerService extends Service implements
     Log.d(TAG, "++skipToNext()");
     if (mAudioIndex == mAudioList.size() - 1) {
       mAudioIndex = 0;
-      mActiveAudioEntity = mAudioList.get(mAudioIndex);
+      mActiveMediaDetails = mAudioList.get(mAudioIndex);
     } else {
-      mActiveAudioEntity = mAudioList.get(++mAudioIndex);
+      mActiveMediaDetails = mAudioList.get(++mAudioIndex);
     }
 
     PreferenceUtils.setAudioIndex(getApplicationContext(), mAudioIndex);
@@ -585,9 +612,9 @@ public class MediaPlayerService extends Service implements
     Log.d(TAG, "++skipToPrevious()");
     if (mAudioIndex == 0) {
       mAudioIndex = mAudioList.size() - 1;
-      mActiveAudioEntity = mAudioList.get(mAudioIndex);
+      mActiveMediaDetails = mAudioList.get(mAudioIndex);
     } else {
-      mActiveAudioEntity = mAudioList.get(--mAudioIndex);
+      mActiveMediaDetails = mAudioList.get(--mAudioIndex);
     }
 
     PreferenceUtils.setAudioIndex(getApplicationContext(), mAudioIndex);
@@ -606,17 +633,20 @@ public class MediaPlayerService extends Service implements
     if (mMediaPlayer.isPlaying()) {
       mMediaPlayer.stop();
     }
+
+    mMediaPlayer.release();
   }
 
   private void updateMetaData() {
 
     Log.d(TAG, "++updateMetaData()");
-    Bitmap albumArt = BitmapFactory.decodeResource(getResources(), R.drawable.ic_notification_dark); // TODO: replace with medias albumArt
-    mMediaSession.setMetadata(new MediaMetadataCompat.Builder()
+
+    Bitmap albumArt = Utils.loadImageFromStorage(getApplicationContext(), mActiveMediaDetails.ArtistId, mActiveMediaDetails.AlbumId);
+    mMediaSessionCompat.setMetadata(new MediaMetadataCompat.Builder()
       .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArt)
-      .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, mActiveAudioEntity.getArtist())
-      .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, mActiveAudioEntity.getAlbum())
-      .putString(MediaMetadataCompat.METADATA_KEY_TITLE, mActiveAudioEntity.getTitle())
+      .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, mActiveMediaDetails.ArtistName)
+      .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, mActiveMediaDetails.AlbumName)
+      .putString(MediaMetadataCompat.METADATA_KEY_TITLE, mActiveMediaDetails.Title)
       .build());
   }
 

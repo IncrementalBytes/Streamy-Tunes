@@ -1,41 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-  android:id="@+id/cardview"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:id="@+id/layout_cardview"
   android:layout_width="match_parent"
-  android:layout_height="wrap_content"
-  android:layout_marginTop="6dp"
-  android:elevation="100dp">
+  android:layout_height="wrap_content">
 
-  <!--android:background="#00bcd4"-->
-  <LinearLayout
+  <androidx.constraintlayout.widget.ConstraintLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/cardview_light_background"
-    android:orientation="horizontal"
-    android:padding="10dp">
+    android:padding="2dp">
 
-    <ImageButton
+    <ImageView
       android:id="@+id/layout_image_play_pause"
-      android:layout_width="45dp"
-      android:layout_height="45dp"
+      android:layout_width="@dimen/image_width_thumbnail"
+      android:layout_height="@dimen/image_height_thumbnail"
+      android:layout_margin="@dimen/default_view_margin"
+      android:elevation="5dp"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent"
       android:src="@android:drawable/ic_media_play"
-      android:layout_gravity="center_vertical"
-      android:tint="@color/colorAccent"
-      android:foregroundGravity="center_vertical"
-      android:layout_marginStart="4dp"
-      android:layout_marginEnd="8dp"
+      android:backgroundTint="@color/icons"
+      android:contentDescription="@string/description_play" />
+
+    <ImageView
+      android:id="@+id/layout_image_album"
+      android:layout_width="@dimen/image_width_thumbnail"
+      android:layout_height="@dimen/image_height_thumbnail"
+      android:layout_margin="@dimen/default_view_margin"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintStart_toEndOf="@id/layout_image_play_pause"
+      app:layout_constraintTop_toTopOf="parent"
+      android:src="@drawable/ic_album_dark"
       android:backgroundTint="@color/icons"
       android:contentDescription="@string/description_play" />
 
     <TextView
       android:id="@+id/layout_text_title"
-      android:layout_width="fill_parent"
+      android:layout_width="0dp"
       android:layout_height="wrap_content"
+      android:layout_margin="@dimen/default_view_margin"
+      app:layout_constraintStart_toEndOf="@id/layout_image_album"
+      app:layout_constraintTop_toTopOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
       android:text="@string/placeholder"
       android:textAppearance="?android:attr/textAppearanceLarge"
       android:textColor="@color/colorPrimary"
-      android:layout_gravity="center_vertical"
-      android:foregroundGravity="center_horizontal"
       android:textStyle="bold|italic" />
-  </LinearLayout>
+
+    <TextView
+      android:id="@+id/layout_text_artist"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      app:layout_constraintStart_toEndOf="@id/layout_image_album"
+      android:layout_margin="@dimen/default_view_margin"
+      app:layout_constraintTop_toBottomOf="@id/layout_text_title"
+      app:layout_constraintEnd_toEndOf="parent"
+      android:text="@string/placeholder"
+      android:textAppearance="?android:attr/textAppearanceLarge"
+      android:textColor="@color/colorPrimaryLight" />
+
+    <TextView
+      android:id="@+id/layout_text_album"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_margin="@dimen/default_view_margin"
+      app:layout_constraintStart_toEndOf="@id/layout_image_album"
+      app:layout_constraintTop_toBottomOf="@id/layout_text_artist"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      android:text="@string/placeholder"
+      android:textAppearance="?android:attr/textAppearanceLarge"
+      android:textColor="@color/colorPrimaryDark" />
+
+  </androidx.constraintlayout.widget.ConstraintLayout>
+
 </androidx.cardview.widget.CardView>

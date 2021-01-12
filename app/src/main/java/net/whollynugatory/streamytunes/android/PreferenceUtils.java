@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Ryan Ward
+ * Copyright 2021 Ryan Ward
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ import androidx.preference.PreferenceManager;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import net.whollynugatory.streamytunes.android.db.entity.AudioEntity;
+import net.whollynugatory.streamytunes.android.db.MediaDetails;
+import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -52,11 +53,11 @@ public class PreferenceUtils {
    * @param context Current application context
    * @return Returns empty list if no data found
    */
-  public static ArrayList<AudioEntity> getAudioList(Context context) {
+  public static ArrayList<MediaDetails> getAudioList(Context context) {
 
     Gson gson = new Gson();
     String json = getStringPref(context, R.string.pref_key_audio_list);
-    Type type = new TypeToken<ArrayList<AudioEntity>>() { }.getType();
+    Type type = new TypeToken<ArrayList<MediaDetails>>() { }.getType();
     return gson.fromJson(json, type);
   }
 
@@ -88,10 +89,10 @@ public class PreferenceUtils {
       .apply();
   }
 
-  public static void setAudioList(Context context, ArrayList<AudioEntity> arrayList) {
+  public static void setAudioList(Context context, ArrayList<MediaDetails> mediaDetailsArrayList) {
 
     Gson gson = new Gson();
-    String json = gson.toJson(arrayList);
+    String json = gson.toJson(mediaDetailsArrayList);
     PreferenceManager.getDefaultSharedPreferences(context)
       .edit()
       .putString(context.getString(R.string.pref_key_audio_list), json)

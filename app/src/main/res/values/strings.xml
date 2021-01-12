@@ -24,6 +24,7 @@
   <string name="discovery">Discovery</string>
   <string name="ok">OK</string>
   <string name="permission_storage">Permission needed for discovering media.</string>
+  <string name="permission_phone">Permission needed for handling phone and power interactions.</string>
   <string name="permission_default">Permission needed for application to function properly.</string>
   <string name="desc_song_list">List of discovered songs.</string>
   <string name="placeholder">TBD</string>
@@ -72,6 +73,10 @@
   <string name="add_or_remove_favorite">Add or Remove Favorite</string>
   <string name="media_url_mp3">https://storage.googleapis.com/exoplayer-test-media-0/play.mp3</string>
   <string name="description_play">play the track</string>
+  <string name="desc_play_media">Play media</string>
+  <string name="desc_previous_media">Previous media</string>
+  <string name="desc_next_media">Next media</string>
+  <string name="desc_album_image">Album image</string>
 
   <plurals name="format_songs">
     <item quantity="one">1 song</item>

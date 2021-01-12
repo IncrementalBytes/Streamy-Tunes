@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Ryan Ward
+ * Copyright 2021 Ryan Ward
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -128,7 +128,7 @@ public class ArtistsFragment extends Fragment {
 
     ArtistsAdapter artistsAdapter = new ArtistsAdapter(getContext());
     mRecyclerView.setAdapter(artistsAdapter);
-    mMediaViewModel.getAllArtists().observe(getViewLifecycleOwner(), artists -> {
+    mMediaViewModel.getArtists().observe(getViewLifecycleOwner(), artists -> {
 
       if (artists == null || artists.size() == 0) {
         // TODO: callback to activity

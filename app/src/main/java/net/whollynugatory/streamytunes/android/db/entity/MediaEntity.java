@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Ryan Ward
+ * Copyright 2021 Ryan Ward
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -35,8 +35,10 @@ public class MediaEntity {
   public String Title;
 
   public long AlbumId;
+  public String AlbumName;
 
   public long ArtistId;
+  public String ArtistName;
 
   public boolean IsAudiobook;
 

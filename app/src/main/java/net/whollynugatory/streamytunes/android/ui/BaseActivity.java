@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Ryan Ward
+ * Copyright 2021 Ryan Ward
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -26,12 +26,9 @@ public class BaseActivity extends AppCompatActivity {
   public static final String UNKNOWN_GUID = "00000000-0000-0000-0000-0000000000000";
 
   public static final int REQUEST_SYNC = 1001;
-  public static final int REQUEST_PLAYER = 1002;
 
   public static final String ARG_ALBUM_ID = "album_id";
   public static final String ARG_ARTIST_ID = "artist_id";
-  public static final String ARG_MEDIA_DETAILS_LIST = "media_details_list";
-  public static final String ARG_MEDIA_ENTITY_LIST = "media_entity_list";
   public static final String ARG_PLAYLIST_ID = "playlist_id";
 
   public static final String DATABASE_NAME = "streamytunes-db.sqlite";
@@ -39,6 +36,20 @@ public class BaseActivity extends AppCompatActivity {
   public static final String DEFAULT_PLAYLIST_FAVORITES = "Favorites";
 
   public static final int REQUEST_STORAGE_PERMISSIONS = 2001;
+  public static final int REQUEST_PHONE_PERMISSIONS = 2002;
+
+  public static final String ACTION_PLAY = "net.whollynugatory.streamytunes.android.PLAY";
+  public static final String ACTION_PAUSE = "net.whollynugatory.streamytunes.android.PAUSE";
+  public static final String ACTION_PREVIOUS = "net.whollynugatory.streamytunes.android.PREVIOUS";
+  public static final String ACTION_NEXT = "net.whollynugatory.streamytunes.android.NEXT";
 
   public static final String BROADCAST_PLAY_NEW_AUDIO = "net.whollynugatory.streamytunes.android.PlayNewAudio";
+
+  public enum ServiceState {
+
+    Stopped,
+    Preparing,
+    Playing,
+    Paused
+  }
 }

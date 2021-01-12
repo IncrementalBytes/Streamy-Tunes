@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Ryan Ward
+ * Copyright 2021Ryan Ward
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -42,31 +42,31 @@ public interface MediaDao {
   void deletePlaylist(PlaylistEntity playlistEntity);
 
   @Query("SELECT * FROM AlbumsView")
-  LiveData<List<AlbumsView>> getAllAlbums();
+  LiveData<List<AlbumsView>> getAlbums();
 
   @Query("SELECT * FROM ArtistsView")
-  LiveData<List<ArtistsView>> getAllArtists();
+  LiveData<List<ArtistsView>> getArtists();
 
   @Query("SELECT * FROM media_table WHERE IsAudiobook == 1")
-  LiveData<List<MediaDetails>> getAllAudiobooks();
+  LiveData<List<MediaDetails>> getAudiobooks();
 
   @Query("SELECT * FROM media_table WHERE IsMusic == 1")
-  LiveData<List<MediaDetails>> getAllMusic();
+  LiveData<List<MediaDetails>> getMusic();
 
   @Query("SELECT * FROM MediaDetails WHERE IsMusic == 1 AND AlbumId == :albumId")
-  LiveData<List<MediaDetails>> getAllMusicByAlbumId(long albumId);
+  LiveData<List<MediaDetails>> getMusicByAlbumId(long albumId);
 
   @Query("SELECT * FROM MediaDetails WHERE IsMusic == 1 AND ArtistId == :artistId")
-  LiveData<List<MediaDetails>> getAllMusicByArtistId(long artistId);
+  LiveData<List<MediaDetails>> getMusicByArtistId(long artistId);
 
   @Query("SELECT * FROM PlaylistDetails WHERE PlaylistId == :playlistId")
-  LiveData<List<PlaylistDetails>> getPlaylistById(String playlistId);
+  LiveData<List<PlaylistDetails>> getMusicByPlaylistId(String playlistId);
 
   @Query("SELECT * FROM PlaylistsView")
-  LiveData<List<PlaylistsView>> getAllPlaylists();
+  LiveData<List<PlaylistsView>> getPlaylists();
 
   @Query("SELECT * FROM media_table WHERE IsPodcast == 1")
-  LiveData<List<MediaDetails>> getAllPodcasts();
+  LiveData<List<MediaDetails>> getPodcasts();
 
   @Insert(onConflict = OnConflictStrategy.IGNORE)
   void insertAlbum(AlbumEntity albumEntity);

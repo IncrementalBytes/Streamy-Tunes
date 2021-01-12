@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Ryan Ward
+ * Copyright 2021 Ryan Ward
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -65,49 +65,49 @@ public class MediaRepository {
     mMediaDao.deletePlaylist(playlistEntity);
   }
 
-  public LiveData<List<AlbumsView>> getAllAlbums() {
+  public LiveData<List<AlbumsView>> getAlbums() {
 
-    return mMediaDao.getAllAlbums();
+    return mMediaDao.getAlbums();
   }
 
-  public LiveData<List<ArtistsView>> getAllArtists() {
+  public LiveData<List<ArtistsView>> getArtists() {
 
-    return mMediaDao.getAllArtists();
+    return mMediaDao.getArtists();
   }
 
-  public LiveData<List<MediaDetails>> getAllAudiobooks() {
+  public LiveData<List<MediaDetails>> getAudiobooks() {
 
-    return mMediaDao.getAllAudiobooks();
+    return mMediaDao.getAudiobooks();
   }
 
-  public LiveData<List<MediaDetails>> getAllMusic() {
+  public LiveData<List<MediaDetails>> getMusic() {
 
-    return mMediaDao.getAllMusic();
+    return mMediaDao.getMusic();
   }
 
-  public LiveData<List<MediaDetails>> getAllMusicByAlbumId(long albumId) {
+  public LiveData<List<MediaDetails>> getMusicByAlbumId(long albumId) {
 
-    return mMediaDao.getAllMusicByAlbumId(albumId);
+    return mMediaDao.getMusicByAlbumId(albumId);
   }
 
-  public LiveData<List<MediaDetails>> getAllMusicByArtistId(long artistId) {
+  public LiveData<List<MediaDetails>> getMusicByArtistId(long artistId) {
 
-    return mMediaDao.getAllMusicByArtistId(artistId);
+    return mMediaDao.getMusicByArtistId(artistId);
   }
 
-  public LiveData<List<PlaylistDetails>> getPlaylistById(String playlistId) {
+  public LiveData<List<PlaylistDetails>> getMusicByPlaylistId(String playlistId) {
 
-    return mMediaDao.getPlaylistById(playlistId);
+    return mMediaDao.getMusicByPlaylistId(playlistId);
   }
 
-  public LiveData<List<PlaylistsView>> getAllPlaylists() {
+  public LiveData<List<PlaylistsView>> getPlaylists() {
 
-    return mMediaDao.getAllPlaylists();
+    return mMediaDao.getPlaylists();
   }
 
-  public LiveData<List<MediaDetails>> getAllPodcasts() {
+  public LiveData<List<MediaDetails>> getPodcasts() {
 
-    return mMediaDao.getAllPodcasts();
+    return mMediaDao.getPodcasts();
   }
 
   public void insertAlbum(AlbumEntity albumEntity) {

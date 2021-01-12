@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Ryan Ward
+ * Copyright 2021 Ryan Ward
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -131,7 +131,7 @@ public class AlbumsFragment extends Fragment {
 
     AlbumAdapter albumAdapter = new AlbumAdapter(getContext());
     mRecyclerView.setAdapter(albumAdapter);
-    mMediaViewModel.getAllAlbums().observe(getViewLifecycleOwner(), albums -> {
+    mMediaViewModel.getAlbums().observe(getViewLifecycleOwner(), albums -> {
 
       if (albums == null || albums.size() == 0) {
         // TODO: callback to activity

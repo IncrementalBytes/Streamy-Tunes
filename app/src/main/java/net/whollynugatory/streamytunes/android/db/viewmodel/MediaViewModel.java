@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Ryan Ward
+ * Copyright 2021 Ryan Ward
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -41,43 +41,43 @@ public class MediaViewModel extends AndroidViewModel {
     mMediaRepository = MediaRepository.getInstance(StreamyTunesDatabase.getInstance(application).mediaDao());
   }
 
-  public LiveData<List<AlbumsView>> getAllAlbums() {
+  public LiveData<List<AlbumsView>> getAlbums() {
 
-    return mMediaRepository.getAllAlbums();
+    return mMediaRepository.getAlbums();
   }
 
-  public LiveData<List<ArtistsView>> getAllArtists() {
+  public LiveData<List<ArtistsView>> getArtists() {
 
-    return mMediaRepository.getAllArtists();
+    return mMediaRepository.getArtists();
   }
 
-  public LiveData<List<MediaDetails>> getAllAudiobooks() {
+  public LiveData<List<MediaDetails>> getAudiobooks() {
 
-    return mMediaRepository.getAllAudiobooks();
+    return mMediaRepository.getAudiobooks();
   }
 
-  public LiveData<List<MediaDetails>> getAllMusicByAlbumId(long albumId) {
+  public LiveData<List<MediaDetails>> getMusicByAlbumId(long albumId) {
 
-    return mMediaRepository.getAllMusicByAlbumId(albumId);
+    return mMediaRepository.getMusicByAlbumId(albumId);
   }
 
-  public LiveData<List<MediaDetails>> getAllMusicByArtistId(long artistId) {
+  public LiveData<List<MediaDetails>> getMusicByArtistId(long artistId) {
 
-    return mMediaRepository.getAllMusicByArtistId(artistId);
+    return mMediaRepository.getMusicByArtistId(artistId);
   }
 
-    public LiveData<List<PlaylistDetails>> getPlaylistById(String playlistId) {
+    public LiveData<List<PlaylistDetails>> getMusicByPlaylistId(String playlistId) {
 
-    return mMediaRepository.getPlaylistById(playlistId);
+    return mMediaRepository.getMusicByPlaylistId(playlistId);
   }
 
-  public LiveData<List<PlaylistsView>> getAllPlaylists() {
+  public LiveData<List<PlaylistsView>> getPlaylists() {
 
-    return mMediaRepository.getAllPlaylists();
+    return mMediaRepository.getPlaylists();
   }
 
-  public LiveData<List<MediaDetails>> getAllPodcasts() {
+  public LiveData<List<MediaDetails>> getPodcasts() {
 
-    return mMediaRepository.getAllPodcasts();
+    return mMediaRepository.getPodcasts();
   }
 }

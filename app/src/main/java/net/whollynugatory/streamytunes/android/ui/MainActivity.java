@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Ryan Ward
+ * Copyright 2021 Ryan Ward
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,27 +16,41 @@
 package net.whollynugatory.streamytunes.android.ui;
 
 import android.Manifest;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 
+import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
+import net.whollynugatory.streamytunes.android.MediaPlayerService;
+import net.whollynugatory.streamytunes.android.MusicService;
 import net.whollynugatory.streamytunes.android.PlaylistAsync;
 import net.whollynugatory.streamytunes.android.PreferenceUtils;
 import net.whollynugatory.streamytunes.android.R;
 import net.whollynugatory.streamytunes.android.UpdateRowAsync;
+import net.whollynugatory.streamytunes.android.Utils;
 import net.whollynugatory.streamytunes.android.db.MediaDetails;
 import net.whollynugatory.streamytunes.android.db.StreamyTunesDatabase;
 import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
@@ -49,8 +63,7 @@ import net.whollynugatory.streamytunes.android.ui.fragments.PlaylistFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.SummaryFragment;
 import net.whollynugatory.streamytunes.android.ui.fragments.UserSettingsFragment;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 public class MainActivity extends BaseActivity implements
   AlbumsFragment.OnAlbumListener,
@@ -61,6 +74,39 @@ public class MainActivity extends BaseActivity implements
 
   private static final String TAG = BaseActivity.BASE_TAG + MainActivity.class.getSimpleName();
 
+  private ServiceState mCurrentState;
+
+  private View mPlayerIncludeView;
+  private ImageView mPlayerAlbumImage;
+  private TextView mPlayerSongText;
+  private TextView mPlayerAlbumText;
+  private ImageButton mPlayerPreviousImage;
+  private ImageButton mPlayerPlayPauseImage;
+  private ImageButton mPlayerNextImage;
+
+  private MediaPlayerService mPlayerService;
+//  private boolean mServiceBound = false;
+
+//  private final ServiceConnection mServiceConnection = new ServiceConnection() {
+//
+//    @Override
+//    public void onServiceConnected(ComponentName name, IBinder service) {
+//
+//      Log.d(TAG, "++onServiceConnected(ComponentName, IBinder)");
+//      MediaPlayerService.LocalBinder binder = (MediaPlayerService.LocalBinder) service;
+//      mPlayer = binder.getService();
+//      mServiceBound = true;
+//      Log.d(TAG, "Service Bound");
+//    }
+//
+//    @Override
+//    public void onServiceDisconnected(ComponentName name) {
+//
+//      Log.d(TAG, "++onServiceDisconnected(ComponentName)");
+//      mServiceBound = false;
+//    }
+//  };
+
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
@@ -68,7 +114,6 @@ public class MainActivity extends BaseActivity implements
     Log.d(TAG, "++onActivityResult(int, int, Intent)");
     switch (requestCode) {
       case BaseActivity.REQUEST_SYNC:
-      case BaseActivity.REQUEST_PLAYER:
       if (resultCode == RESULT_OK) {
         Log.d(TAG, "Result OK from other activity.");
       }
@@ -83,6 +128,46 @@ public class MainActivity extends BaseActivity implements
 
     Log.d(TAG, "++onCreate(Bundle)");
     setContentView(R.layout.activity_main);
+
+    mCurrentState = ServiceState.Preparing;
+
+    mPlayerIncludeView = findViewById(R.id.main_include_player);
+    mPlayerAlbumImage = findViewById(R.id.player_image_album);
+    mPlayerAlbumText = findViewById(R.id.player_text_details);
+    mPlayerSongText = findViewById(R.id.player_text_song);
+
+    mPlayerNextImage = findViewById(R.id.player_image_next);
+    mPlayerNextImage.setOnClickListener(v -> {
+
+      List<MediaDetails> mediaDetailsList = PreferenceUtils.getAudioList(this);
+      if (mediaDetailsList.size() > 1) {
+        checkForPermission(BaseActivity.ACTION_NEXT);
+      } else {
+        Toast.makeText(this, "No Op", Toast.LENGTH_SHORT).show();
+      }
+    });
+
+    mPlayerPlayPauseImage = findViewById(R.id.player_image_play_pause);
+    mPlayerPlayPauseImage.setOnClickListener(v -> {
+
+        if (mCurrentState.equals(ServiceState.Paused)) {
+          checkForPermission(BaseActivity.ACTION_PLAY);
+        } else if (mCurrentState.equals(ServiceState.Playing)) {
+          checkForPermission(BaseActivity.ACTION_PAUSE);
+        }
+      });
+
+    mPlayerPreviousImage = findViewById(R.id.player_image_prev);
+    mPlayerPreviousImage.setOnClickListener(v -> {
+
+      List<MediaDetails> mediaDetailsList = PreferenceUtils.getAudioList(this);
+      if (mediaDetailsList.size() > 1) {
+        checkForPermission(BaseActivity.ACTION_PREVIOUS);
+      } else {
+        Toast.makeText(this, "No Op", Toast.LENGTH_SHORT).show();
+      }
+    });
+
     Toolbar mainToolbar = findViewById(R.id.main_toolbar);
     BottomNavigationView navigationView = findViewById(R.id.main_nav_bottom);
     setSupportActionBar(mainToolbar);
@@ -122,7 +207,7 @@ public class MainActivity extends BaseActivity implements
       return false;
     });
 
-    checkForPermission();
+    replaceFragment(SummaryFragment.newInstance());
   }
 
   @Override
@@ -138,6 +223,10 @@ public class MainActivity extends BaseActivity implements
     super.onDestroy();
 
     Log.d(TAG, "++onDestroy()");
+//    if (mServiceBound) {
+//      unbindService(mServiceConnection);
+//      mPlayer.stopSelf();
+//    }
   }
 
   @Override
@@ -165,9 +254,23 @@ public class MainActivity extends BaseActivity implements
   public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
     Log.d(TAG, "++onRequestPermissionsResult(int, String[], int[])");
-    if (requestCode == BaseActivity.REQUEST_STORAGE_PERMISSIONS) {
-      checkForPermission();
+    if (requestCode == BaseActivity.REQUEST_PHONE_PERMISSIONS) {
+      checkForPermission(); // TODO: add feedback on permission denied
     }
+  }
+
+  @Override
+  public void onRestoreInstanceState(@NonNull  Bundle savedInstanceState) {
+    super.onRestoreInstanceState(savedInstanceState);
+
+//    mServiceBound = savedInstanceState.getBoolean("ServiceState");
+  }
+
+  @Override
+  public void onSaveInstanceState(Bundle savedInstanceState) {
+
+//    savedInstanceState.putBoolean("ServiceState", mServiceBound);
+    super.onSaveInstanceState(savedInstanceState);
   }
 
   /*
@@ -198,13 +301,18 @@ public class MainActivity extends BaseActivity implements
   }
 
   @Override
-  public void onMediaClicked(Collection<MediaDetails> mediaDetailsCollection) {
+  public void onMediaClicked() {
 
-    Log.d(TAG, "++onMediaClicked(Collection<MediaDetails>)");
-//    replaceFragment(PlayerFragment.newInstance(new ArrayList<>(mediaDetailsCollection)));
-    Intent intent = new Intent(this, PlayerActivity.class);
-    intent.putExtra(BaseActivity.ARG_MEDIA_DETAILS_LIST, new ArrayList<>(mediaDetailsCollection));
-    startActivityForResult(intent, BaseActivity.REQUEST_PLAYER);
+    Log.d(TAG, "++onMediaClicked()");
+//    if (!mServiceBound) {
+//      Intent playerIntent = new Intent(this, MediaPlayerService.class);
+//      startService(playerIntent);
+//      bindService(playerIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+//    } else {
+//      Intent broadcastIntent = new Intent(BaseActivity.BROADCAST_PLAY_NEW_AUDIO);
+//      sendBroadcast(broadcastIntent);
+//    }
+    checkForPermission();
   }
 
   @Override
@@ -231,7 +339,7 @@ public class MainActivity extends BaseActivity implements
   public void onPlaylistClicked(String playlistId) {
 
     Log.d(TAG, "++onPlaylistClicked(String)");
-    //replaceFragment(MediaFragment.newInstanceByPlaylist(playlistId));
+    replaceFragment(MediaFragment.newInstanceByPlaylist(playlistId));
   }
 
   @Override
@@ -302,10 +410,21 @@ public class MainActivity extends BaseActivity implements
   */
   private void checkForPermission() {
 
-    Log.d(TAG, "++checkForPermission(String, int)");
-    if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-      if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-        String requestMessage = getString(R.string.permission_storage);
+    Log.d(TAG, "++checkForPermission()");
+    checkForPermission("");
+  }
+
+  private void checkForPermission(String action) {
+
+    Log.d(TAG, "++checkForPermission(String)");
+    if (ContextCompat.checkSelfPermission(this, Manifest.permission.FOREGROUND_SERVICE) != PackageManager.PERMISSION_GRANTED ||
+      ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED ||
+      ContextCompat.checkSelfPermission(this, Manifest.permission.WAKE_LOCK) != PackageManager.PERMISSION_GRANTED) {
+
+      if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.FOREGROUND_SERVICE) ||
+        ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_PHONE_STATE) ||
+        ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WAKE_LOCK)) {
+        String requestMessage = getString(R.string.permission_phone);
         Snackbar.make(
           findViewById(R.id.main_fragment_container),
           requestMessage,
@@ -314,15 +433,83 @@ public class MainActivity extends BaseActivity implements
             getString(R.string.ok),
             view -> ActivityCompat.requestPermissions(
               MainActivity.this,
-              new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-              BaseActivity.REQUEST_STORAGE_PERMISSIONS))
+              new String[]{Manifest.permission.FOREGROUND_SERVICE, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WAKE_LOCK},
+              BaseActivity.REQUEST_PHONE_PERMISSIONS))
           .show();
       } else {
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, BaseActivity.REQUEST_STORAGE_PERMISSIONS);
+        ActivityCompat.requestPermissions(
+          this,
+          new String[]{Manifest.permission.FOREGROUND_SERVICE, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WAKE_LOCK},
+          BaseActivity.REQUEST_PHONE_PERMISSIONS);
       }
     } else {
-      Log.d(TAG, "Permission granted: " + Manifest.permission.READ_EXTERNAL_STORAGE);
-      replaceFragment(SummaryFragment.newInstance());
+      int currentAudioIndex = PreferenceUtils.getAudioIndex(this);
+      List<MediaDetails> audioList = PreferenceUtils.getAudioList(this);
+      MediaDetails currentMediaDetails = audioList.get(currentAudioIndex);
+      Intent serviceIntent = new Intent(BaseActivity.ACTION_PLAY);
+      switch (action) {
+        case BaseActivity.ACTION_NEXT:
+          if (audioList.size() > 1) {
+            mPlayerNextImage.setEnabled(true);
+            currentAudioIndex++;
+            if (currentAudioIndex > audioList.size()) {
+              currentAudioIndex = 0;
+            }
+          } else {
+            mPlayerNextImage.setEnabled(false);
+          }
+
+          currentMediaDetails = audioList.get(currentAudioIndex);
+          mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_pause_dark, null));
+          mCurrentState = ServiceState.Playing;
+          break;
+        case BaseActivity.ACTION_PAUSE:
+          mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_play_dark, null));
+          serviceIntent = new Intent(BaseActivity.ACTION_PAUSE);
+          mCurrentState = ServiceState.Paused;
+          break;
+        case BaseActivity.ACTION_PLAY:
+          mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_pause_dark, null));
+          mCurrentState = ServiceState.Playing;
+          break;
+        case BaseActivity.ACTION_PREVIOUS:
+          if (audioList.size() > 1) {
+            mPlayerPreviousImage.setEnabled(true);
+            currentAudioIndex--;
+            if (currentAudioIndex < 0) {
+              currentAudioIndex = audioList.size() - 1;
+            }
+          } else {
+            mPlayerPreviousImage.setEnabled(false);
+          }
+
+          currentMediaDetails = audioList.get(currentAudioIndex);
+          mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_pause_dark, null));
+          mCurrentState = ServiceState.Playing;
+          break;
+        default:
+          mCurrentState = ServiceState.Playing;
+          mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_pause_dark, null));
+          break;
+      }
+
+      if (currentMediaDetails != null) {
+        Bitmap albumArt = Utils.loadImageFromStorage(this, currentMediaDetails.ArtistId, currentMediaDetails.AlbumId);
+        if (albumArt != null) {
+          mPlayerAlbumImage.setImageBitmap(albumArt);
+        }
+
+        mPlayerAlbumText.setText(currentMediaDetails.AlbumName);
+        mPlayerSongText.setText(currentMediaDetails.Title);
+      }
+
+      if (!action.isEmpty()) {
+        serviceIntent = new Intent(action);
+      }
+
+      mPlayerIncludeView.setVisibility(View.VISIBLE);
+      serviceIntent.setPackage(this.getPackageName());
+      startService(serviceIntent);
     }
   }
 

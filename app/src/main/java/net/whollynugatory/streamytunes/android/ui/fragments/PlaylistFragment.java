@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Ryan Ward
+ * Copyright 2021 Ryan Ward
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -129,7 +129,7 @@ public class PlaylistFragment extends Fragment {
 
     PlaylistAdapter playlistAdapter = new PlaylistAdapter(getContext());
     mRecyclerView.setAdapter(playlistAdapter);
-    mMediaViewModel.getAllPlaylists().observe(getViewLifecycleOwner(), playlistsView -> {
+    mMediaViewModel.getPlaylists().observe(getViewLifecycleOwner(), playlistsView -> {
 
       if (playlistsView == null || playlistsView.size() == 0) {
         // TODO: callback to activity

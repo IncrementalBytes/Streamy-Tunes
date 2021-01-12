@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Ryan Ward
+ * Copyright 2021 Ryan Ward
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import net.whollynugatory.streamytunes.android.PreferenceUtils;
 import net.whollynugatory.streamytunes.android.R;
 import net.whollynugatory.streamytunes.android.Utils;
 import net.whollynugatory.streamytunes.android.db.MediaDetails;
@@ -41,7 +42,6 @@ import net.whollynugatory.streamytunes.android.db.viewmodel.MediaViewModel;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
@@ -52,7 +52,7 @@ public class MediaFragment extends Fragment {
   public interface OnMediaListener {
 
     void onMediaAddToPlaylist(MediaEntity mediaEntity);
-    void onMediaClicked(Collection<MediaDetails> mediaDetailsCollection);
+    void onMediaClicked();
     void onMediaUpdateFavorites(MediaEntity mediaEntity);
   }
 
@@ -87,7 +87,7 @@ public class MediaFragment extends Fragment {
 
   public static MediaFragment newInstanceByPlaylist(String playlistId) {
 
-    Log.d(TAG, "++newInstanceByPlaylist(long)");
+    Log.d(TAG, "++newInstanceByPlaylist(String)");
     MediaFragment fragment = new MediaFragment();
     Bundle arguments = new Bundle();
     arguments.putString(BaseActivity.ARG_PLAYLIST_ID, playlistId);
@@ -187,7 +187,7 @@ public class MediaFragment extends Fragment {
     MediaAdapter mediaAdapter = new MediaAdapter(getContext());
     mRecyclerView.setAdapter(mediaAdapter);
     if (mAlbumId > BaseActivity.UNKNOWN_ID) {
-      mMediaViewModel.getAllMusicByAlbumId(mAlbumId).observe(getViewLifecycleOwner(), albumWithSongs -> {
+      mMediaViewModel.getMusicByAlbumId(mAlbumId).observe(getViewLifecycleOwner(), albumWithSongs -> {
 
         if (albumWithSongs != null && albumWithSongs.size() > 0) {
           mediaAdapter.setMediaDetailsList(albumWithSongs);
@@ -196,7 +196,7 @@ public class MediaFragment extends Fragment {
         }
       });
     } else if (mArtistId > BaseActivity.UNKNOWN_ID) {
-      mMediaViewModel.getAllMusicByArtistId(mArtistId).observe(getViewLifecycleOwner(), artistWithSongs -> {
+      mMediaViewModel.getMusicByArtistId(mArtistId).observe(getViewLifecycleOwner(), artistWithSongs -> {
 
         if (artistWithSongs != null && artistWithSongs.size() > 0) {
           mediaAdapter.setMediaDetailsList(artistWithSongs);
@@ -205,7 +205,7 @@ public class MediaFragment extends Fragment {
         }
       });
     } else if (!mPlaylistId.isEmpty() && !mPlaylistId.equals(BaseActivity.UNKNOWN_GUID)) {
-      mMediaViewModel.getPlaylistById(mPlaylistId).observe(getViewLifecycleOwner(), playlistSongs -> {
+      mMediaViewModel.getMusicByPlaylistId(mPlaylistId).observe(getViewLifecycleOwner(), playlistSongs -> {
 
         if (playlistSongs != null && playlistSongs.size() > 0) {
           mediaAdapter.setPlaylistDetailsList(playlistSongs);
@@ -299,25 +299,23 @@ public class MediaFragment extends Fragment {
       @Override
       public void onClick(View view) {
 
-        List<MediaDetails> mediaList = new ArrayList<>();
-        boolean addedToList = false;
-        for (MediaDetails media : mMediaList) {
-          if (addedToList) { // add media following the media item we are looking for
-            mediaList.add(media);
-          } else if (media.MediaId == mMedia.MediaId) {
-            addedToList = true;
-            mediaList.add(media);
+        int mediaIndex = 0;
+        for (; mediaIndex < mMediaList.size(); mediaIndex++) {
+          if (mMediaList.get(mediaIndex).MediaId == mMedia.MediaId) {
+            break;
           }
         }
 
-        mCallback.onMediaClicked(mediaList);
+        PreferenceUtils.setAudioList(getContext(), mMediaList);
+        PreferenceUtils.setAudioIndex(getContext(), mediaIndex);
+        mCallback.onMediaClicked();
       }
     }
 
     private final Context mContext;
     private final LayoutInflater mInflater;
 
-    private List<MediaDetails> mMediaList;
+    private ArrayList<MediaDetails> mMediaList;
 
     MediaAdapter(Context context) {
 

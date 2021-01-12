@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Ryan Ward
+ * Copyright 2021 Ryan Ward
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -178,7 +178,7 @@ public class SummaryFragment extends Fragment {
   private void updateUI() {
 
     if (mIsAudiobook) {
-      mMediaViewModel.getAllAudiobooks().observe(getViewLifecycleOwner(), audiobookEntities -> {
+      mMediaViewModel.getAudiobooks().observe(getViewLifecycleOwner(), audiobookEntities -> {
 
         if (audiobookEntities != null) {
           mFirstValueTextView.setText(getResources().getQuantityString(R.plurals.format_authors, audiobookEntities.size(), audiobookEntities.size()));
@@ -191,7 +191,7 @@ public class SummaryFragment extends Fragment {
         }
       });
     } else if (mIsPodcast) {
-      mMediaViewModel.getAllPodcasts().observe(getViewLifecycleOwner(), podcastEntities -> {
+      mMediaViewModel.getPodcasts().observe(getViewLifecycleOwner(), podcastEntities -> {
 
         if (podcastEntities != null) {
           mFirstValueTextView.setText(getResources().getQuantityString(R.plurals.format_podcasts, podcastEntities.size(), podcastEntities.size()));
@@ -199,13 +199,13 @@ public class SummaryFragment extends Fragment {
         }
       });
     } else {
-      mMediaViewModel.getAllAlbums().observe(getViewLifecycleOwner(), albumViews -> {
+      mMediaViewModel.getAlbums().observe(getViewLifecycleOwner(), albumViews -> {
 
         mFirstValueTextView.setText(getResources().getQuantityString(R.plurals.format_albums, albumViews.size(), albumViews.size()));
-        mMediaViewModel.getAllArtists().observe(getViewLifecycleOwner(), artistViews -> {
+        mMediaViewModel.getArtists().observe(getViewLifecycleOwner(), artistViews -> {
 
           mSecondValueTextView.setText(getResources().getQuantityString(R.plurals.format_artists, artistViews.size(), artistViews.size()));
-          mMediaViewModel.getAllPlaylists().observe(getViewLifecycleOwner(), playlistViews -> {
+          mMediaViewModel.getPlaylists().observe(getViewLifecycleOwner(), playlistViews -> {
 
             mThirdValueTextView.setText(getResources().getQuantityString(R.plurals.format_playlists, playlistViews.size(), playlistViews.size()));
             mCallback.onQueryComplete(albumViews.size() + artistViews.size() + playlistViews.size());
