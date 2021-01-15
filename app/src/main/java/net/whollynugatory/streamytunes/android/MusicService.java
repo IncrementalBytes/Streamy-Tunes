@@ -24,6 +24,7 @@ import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.lifecycle.MutableLiveData;
 
 import net.whollynugatory.streamytunes.android.db.MediaDetails;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
@@ -129,7 +130,7 @@ public class MusicService extends Service implements
 
   // The component name of MusicIntentReceiver, for use with media button and remote control
   // APIs
-  ComponentName mMediaButtonReceiverComponent;
+//  ComponentName mMediaButtonReceiverComponent;
 
   AudioManager mAudioManager;
   NotificationManager mNotificationManager;
@@ -185,7 +186,7 @@ public class MusicService extends Service implements
 
     mDummyAlbumArt = BitmapFactory.decodeResource(getResources(), R.drawable.ic_song_dark);
 
-    mMediaButtonReceiverComponent = new ComponentName(this, MusicIntentReceiver.class);
+//    mMediaButtonReceiverComponent = new ComponentName(this, MusicIntentReceiver.class);
   }
 
   /**
@@ -397,7 +398,7 @@ public class MusicService extends Service implements
       // Use the remote control APIs (if available) to set the playback state
       if (mRemoteControlClientCompat == null) {
         Intent intent = new Intent(Intent.ACTION_MEDIA_BUTTON);
-        intent.setComponent(mMediaButtonReceiverComponent);
+//        intent.setComponent(mMediaButtonReceiverComponent);
         mRemoteControlClientCompat = new RemoteControlClientCompat(PendingIntent.getBroadcast(this, 0, intent, 0));
         RemoteControlHelper.registerRemoteControlClient(mAudioManager, mRemoteControlClientCompat);
       }
@@ -410,13 +411,14 @@ public class MusicService extends Service implements
 //          RemoteControlClient.FLAG_KEY_MEDIA_STOP); // deprecated
 
       // Update the remote controls
+      Bitmap albumArt = Utils.loadImageFromStorage(this, mActiveMediaDetails.ArtistId, mActiveMediaDetails.AlbumId);
       mRemoteControlClientCompat.editMetadata(true)
         .putString(MediaMetadataRetriever.METADATA_KEY_ARTIST, mActiveMediaDetails.ArtistName)
         .putString(MediaMetadataRetriever.METADATA_KEY_ALBUM, mActiveMediaDetails.AlbumName)
         .putString(MediaMetadataRetriever.METADATA_KEY_TITLE, mActiveMediaDetails.Title)
 //        .putLong(MediaMetadataRetriever.METADATA_KEY_DURATION, playingItem.getDuration())
         // TODO: fetch real item artwork
-        .putBitmap(RemoteControlClientCompat.MetadataEditorCompat.METADATA_KEY_ARTWORK, mDummyAlbumArt)
+        .putBitmap(RemoteControlClientCompat.MetadataEditorCompat.METADATA_KEY_ARTWORK, albumArt)
         .apply();
 
       // starts preparing the media player in the background. When it's done, it will call
@@ -425,6 +427,7 @@ public class MusicService extends Service implements
       //
       // Until the media player is prepared, we *cannot* call start() on it!
       mPlayer.prepareAsync();
+      Log.d(TAG, "Playing: " + mActiveMediaDetails.toString());
     } catch (IOException ex) {
       Log.e(TAG, "IOException playing next song.", ex);
       ex.printStackTrace();
@@ -458,7 +461,6 @@ public class MusicService extends Service implements
   public void onPrepared(MediaPlayer player) {
 
     Log.d(TAG, "++onPrepared(MediaPlayer)");
-    // The media player is done preparing. That means we can start playing!
     mState = ServiceState.Playing;
     updateNotification(mSongTitle + " (playing)");
     configAndStartMediaPlayer();

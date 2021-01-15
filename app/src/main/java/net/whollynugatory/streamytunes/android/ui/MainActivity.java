@@ -30,6 +30,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 
 import android.os.IBinder;
 import android.util.Log;
@@ -45,7 +46,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
 import net.whollynugatory.streamytunes.android.MediaPlayerService;
-import net.whollynugatory.streamytunes.android.MusicService;
+import net.whollynugatory.streamytunes.android.PlaybackStatus;
 import net.whollynugatory.streamytunes.android.PlaylistAsync;
 import net.whollynugatory.streamytunes.android.PreferenceUtils;
 import net.whollynugatory.streamytunes.android.R;
@@ -74,7 +75,8 @@ public class MainActivity extends BaseActivity implements
 
   private static final String TAG = BaseActivity.BASE_TAG + MainActivity.class.getSimpleName();
 
-  private ServiceState mCurrentState;
+//  private ServiceState mCurrentState;
+  private PlaybackStatus mCurrentPlaybackStatus;
 
   private View mPlayerIncludeView;
   private ImageView mPlayerAlbumImage;
@@ -85,27 +87,8 @@ public class MainActivity extends BaseActivity implements
   private ImageButton mPlayerNextImage;
 
   private MediaPlayerService mPlayerService;
-//  private boolean mServiceBound = false;
-
-//  private final ServiceConnection mServiceConnection = new ServiceConnection() {
-//
-//    @Override
-//    public void onServiceConnected(ComponentName name, IBinder service) {
-//
-//      Log.d(TAG, "++onServiceConnected(ComponentName, IBinder)");
-//      MediaPlayerService.LocalBinder binder = (MediaPlayerService.LocalBinder) service;
-//      mPlayer = binder.getService();
-//      mServiceBound = true;
-//      Log.d(TAG, "Service Bound");
-//    }
-//
-//    @Override
-//    public void onServiceDisconnected(ComponentName name) {
-//
-//      Log.d(TAG, "++onServiceDisconnected(ComponentName)");
-//      mServiceBound = false;
-//    }
-//  };
+  private boolean mServiceBound = false;
+  private ServiceConnection mServiceConnection;
 
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -129,7 +112,7 @@ public class MainActivity extends BaseActivity implements
     Log.d(TAG, "++onCreate(Bundle)");
     setContentView(R.layout.activity_main);
 
-    mCurrentState = ServiceState.Preparing;
+//    mCurrentState = ServiceState.Preparing;
 
     mPlayerIncludeView = findViewById(R.id.main_include_player);
     mPlayerAlbumImage = findViewById(R.id.player_image_album);
@@ -150,10 +133,19 @@ public class MainActivity extends BaseActivity implements
     mPlayerPlayPauseImage = findViewById(R.id.player_image_play_pause);
     mPlayerPlayPauseImage.setOnClickListener(v -> {
 
-        if (mCurrentState.equals(ServiceState.Paused)) {
-          checkForPermission(BaseActivity.ACTION_PLAY);
-        } else if (mCurrentState.equals(ServiceState.Playing)) {
-          checkForPermission(BaseActivity.ACTION_PAUSE);
+//        if (mCurrentState.equals(ServiceState.Paused)) {
+//          checkForPermission(BaseActivity.ACTION_PLAY);
+//        } else if (mCurrentState.equals(ServiceState.Playing)) {
+//          checkForPermission(BaseActivity.ACTION_PAUSE);
+//        }
+
+        if (mServiceBound) {
+          Intent broadcastIntent = new Intent(BaseActivity.BROADCAST_PLAY_AUDIO);
+          if (mCurrentPlaybackStatus.equals(PlaybackStatus.PLAYING)) {
+            broadcastIntent = new Intent(BaseActivity.BROADCAST_PAUSE_AUDIO);
+          }
+
+          sendBroadcast(broadcastIntent);
         }
       });
 
@@ -207,6 +199,59 @@ public class MainActivity extends BaseActivity implements
       return false;
     });
 
+    mServiceConnection = new ServiceConnection() {
+
+      @Override
+      public void onServiceConnected(ComponentName name, IBinder service) {
+
+        Log.d(TAG, "++onServiceConnected(ComponentName, IBinder)");
+        MediaPlayerService.LocalBinder binder = (MediaPlayerService.LocalBinder) service;
+        mPlayerService = binder.getService();
+        mServiceBound = true;
+//        mPlayerService.registerClient(getParent());
+        Log.d(TAG, "Service Bound");
+
+        final Observer<PlaybackStatus> statusObserver = playbackStatus -> {
+
+          if (playbackStatus.equals(PlaybackStatus.PAUSED) || playbackStatus.equals(PlaybackStatus.STOPPED)) {
+            if (mPlayerPlayPauseImage != null) {
+              mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_play_dark, null));
+            }
+          } else if (playbackStatus.equals(PlaybackStatus.PLAYING)) {
+            if (mPlayerPlayPauseImage != null) {
+              mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_pause_dark, null));
+            }
+          }
+
+          mCurrentPlaybackStatus = playbackStatus;
+        };
+
+        mPlayerService.MusicServiceState.observe(MainActivity.this, statusObserver);
+
+        final Observer<MediaDetails> mediaObserver = mediaDetails -> {
+
+          if (mediaDetails.MediaId != BaseActivity.UNKNOWN_ID) {
+            Bitmap albumArt = Utils.loadImageFromStorage(getApplicationContext(), mediaDetails.ArtistId, mediaDetails.AlbumId);
+            if (albumArt != null) {
+              mPlayerAlbumImage.setImageBitmap(albumArt);
+            }
+
+            mPlayerAlbumText.setText(mediaDetails.AlbumName);
+            mPlayerSongText.setText(mediaDetails.Title);
+          }
+        };
+
+        mPlayerService.CurrentMediaDetails.observe(MainActivity.this, mediaObserver);
+      }
+
+      @Override
+      public void onServiceDisconnected(ComponentName name) {
+
+        Log.d(TAG, "++onServiceDisconnected(ComponentName)");
+        mServiceBound = false;
+      }
+    };
+
     replaceFragment(SummaryFragment.newInstance());
   }
 
@@ -223,10 +268,10 @@ public class MainActivity extends BaseActivity implements
     super.onDestroy();
 
     Log.d(TAG, "++onDestroy()");
-//    if (mServiceBound) {
-//      unbindService(mServiceConnection);
-//      mPlayer.stopSelf();
-//    }
+    if (mServiceBound) {
+      unbindService(mServiceConnection);
+      mPlayerService.stopSelf();
+    }
   }
 
   @Override
@@ -263,13 +308,13 @@ public class MainActivity extends BaseActivity implements
   public void onRestoreInstanceState(@NonNull  Bundle savedInstanceState) {
     super.onRestoreInstanceState(savedInstanceState);
 
-//    mServiceBound = savedInstanceState.getBoolean("ServiceState");
+    mServiceBound = savedInstanceState.getBoolean("ServiceState");
   }
 
   @Override
   public void onSaveInstanceState(Bundle savedInstanceState) {
 
-//    savedInstanceState.putBoolean("ServiceState", mServiceBound);
+    savedInstanceState.putBoolean("ServiceState", mServiceBound);
     super.onSaveInstanceState(savedInstanceState);
   }
 
@@ -304,14 +349,6 @@ public class MainActivity extends BaseActivity implements
   public void onMediaClicked() {
 
     Log.d(TAG, "++onMediaClicked()");
-//    if (!mServiceBound) {
-//      Intent playerIntent = new Intent(this, MediaPlayerService.class);
-//      startService(playerIntent);
-//      bindService(playerIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
-//    } else {
-//      Intent broadcastIntent = new Intent(BaseActivity.BROADCAST_PLAY_NEW_AUDIO);
-//      sendBroadcast(broadcastIntent);
-//    }
     checkForPermission();
   }
 
@@ -446,70 +483,88 @@ public class MainActivity extends BaseActivity implements
       int currentAudioIndex = PreferenceUtils.getAudioIndex(this);
       List<MediaDetails> audioList = PreferenceUtils.getAudioList(this);
       MediaDetails currentMediaDetails = audioList.get(currentAudioIndex);
-      Intent serviceIntent = new Intent(BaseActivity.ACTION_PLAY);
-      switch (action) {
-        case BaseActivity.ACTION_NEXT:
-          if (audioList.size() > 1) {
-            mPlayerNextImage.setEnabled(true);
-            currentAudioIndex++;
-            if (currentAudioIndex > audioList.size()) {
-              currentAudioIndex = 0;
-            }
-          } else {
-            mPlayerNextImage.setEnabled(false);
-          }
 
-          currentMediaDetails = audioList.get(currentAudioIndex);
-          mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_pause_dark, null));
-          mCurrentState = ServiceState.Playing;
-          break;
-        case BaseActivity.ACTION_PAUSE:
-          mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_play_dark, null));
-          serviceIntent = new Intent(BaseActivity.ACTION_PAUSE);
-          mCurrentState = ServiceState.Paused;
-          break;
-        case BaseActivity.ACTION_PLAY:
-          mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_pause_dark, null));
-          mCurrentState = ServiceState.Playing;
-          break;
-        case BaseActivity.ACTION_PREVIOUS:
-          if (audioList.size() > 1) {
-            mPlayerPreviousImage.setEnabled(true);
-            currentAudioIndex--;
-            if (currentAudioIndex < 0) {
-              currentAudioIndex = audioList.size() - 1;
-            }
-          } else {
-            mPlayerPreviousImage.setEnabled(false);
-          }
-
-          currentMediaDetails = audioList.get(currentAudioIndex);
-          mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_pause_dark, null));
-          mCurrentState = ServiceState.Playing;
-          break;
-        default:
-          mCurrentState = ServiceState.Playing;
-          mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_pause_dark, null));
-          break;
-      }
-
-      if (currentMediaDetails != null) {
-        Bitmap albumArt = Utils.loadImageFromStorage(this, currentMediaDetails.ArtistId, currentMediaDetails.AlbumId);
-        if (albumArt != null) {
-          mPlayerAlbumImage.setImageBitmap(albumArt);
-        }
-
-        mPlayerAlbumText.setText(currentMediaDetails.AlbumName);
-        mPlayerSongText.setText(currentMediaDetails.Title);
-      }
-
-      if (!action.isEmpty()) {
-        serviceIntent = new Intent(action);
+      /*
+        MediaPlayerService implementation
+       */
+      if (!mServiceBound) {
+        Intent playerIntent = new Intent(this, MediaPlayerService.class);
+        startService(playerIntent);
+        bindService(playerIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+      } else {
+        Intent broadcastIntent = new Intent(BaseActivity.BROADCAST_PLAY_AUDIO);
+        sendBroadcast(broadcastIntent);
       }
 
       mPlayerIncludeView.setVisibility(View.VISIBLE);
-      serviceIntent.setPackage(this.getPackageName());
-      startService(serviceIntent);
+
+      /*
+        MusicService implementation
+       */
+//      Intent serviceIntent = new Intent(BaseActivity.ACTION_PLAY);
+//      switch (action) {
+//        case BaseActivity.ACTION_NEXT:
+//          if (audioList.size() > 1) {
+//            mPlayerNextImage.setEnabled(true);
+//            currentAudioIndex++;
+//            if (currentAudioIndex > audioList.size()) {
+//              currentAudioIndex = 0;
+//            }
+//          } else {
+//            mPlayerNextImage.setEnabled(false);
+//          }
+//
+//          currentMediaDetails = audioList.get(currentAudioIndex);
+//          mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_pause_dark, null));
+//          mCurrentState = ServiceState.Playing;
+//          break;
+//        case BaseActivity.ACTION_PAUSE:
+//          mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_play_dark, null));
+//          serviceIntent = new Intent(BaseActivity.ACTION_PAUSE);
+//          mCurrentState = ServiceState.Paused;
+//          break;
+//        case BaseActivity.ACTION_PLAY:
+//          mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_pause_dark, null));
+//          mCurrentState = ServiceState.Playing;
+//          break;
+//        case BaseActivity.ACTION_PREVIOUS:
+//          if (audioList.size() > 1) {
+//            mPlayerPreviousImage.setEnabled(true);
+//            currentAudioIndex--;
+//            if (currentAudioIndex < 0) {
+//              currentAudioIndex = audioList.size() - 1;
+//            }
+//          } else {
+//            mPlayerPreviousImage.setEnabled(false);
+//          }
+//
+//          currentMediaDetails = audioList.get(currentAudioIndex);
+//          mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_pause_dark, null));
+//          mCurrentState = ServiceState.Playing;
+//          break;
+//        default:
+//          mCurrentState = ServiceState.Playing;
+//          mPlayerPlayPauseImage.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_pause_dark, null));
+//          break;
+//      }
+//
+//      if (currentMediaDetails != null) {
+//        Bitmap albumArt = Utils.loadImageFromStorage(this, currentMediaDetails.ArtistId, currentMediaDetails.AlbumId);
+//        if (albumArt != null) {
+//          mPlayerAlbumImage.setImageBitmap(albumArt);
+//        }
+//
+//        mPlayerAlbumText.setText(currentMediaDetails.AlbumName);
+//        mPlayerSongText.setText(currentMediaDetails.Title);
+//      }
+//
+//      if (!action.isEmpty()) {
+//        serviceIntent = new Intent(action);
+//      }
+//
+//      mPlayerIncludeView.setVisibility(View.VISIBLE);
+//      serviceIntent.setPackage(this.getPackageName());
+//      startService(serviceIntent);
     }
   }
 

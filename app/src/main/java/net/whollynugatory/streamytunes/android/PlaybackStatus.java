@@ -16,6 +16,9 @@
 package net.whollynugatory.streamytunes.android;
 
 public enum PlaybackStatus {
+
+  LOADING,
+  PAUSED,
   PLAYING,
-  PAUSED
+  STOPPED
 }

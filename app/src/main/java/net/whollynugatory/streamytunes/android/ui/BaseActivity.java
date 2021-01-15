@@ -43,7 +43,10 @@ public class BaseActivity extends AppCompatActivity {
   public static final String ACTION_PREVIOUS = "net.whollynugatory.streamytunes.android.PREVIOUS";
   public static final String ACTION_NEXT = "net.whollynugatory.streamytunes.android.NEXT";
 
-  public static final String BROADCAST_PLAY_NEW_AUDIO = "net.whollynugatory.streamytunes.android.PlayNewAudio";
+  public static final String BROADCAST_NEXT_AUDIO = "net.whollynugatory.streamytunes.android.NextAudio";
+  public static final String BROADCAST_PAUSE_AUDIO = "net.whollynugatory.streamytunes.android.PauseAudio";
+  public static final String BROADCAST_PLAY_AUDIO = "net.whollynugatory.streamytunes.android.PlayAudio";
+  public static final String BROADCAST_PREV_AUDIO = "net.whollynugatory.streamytunes.android.PrevAudio";
 
   public enum ServiceState {
 

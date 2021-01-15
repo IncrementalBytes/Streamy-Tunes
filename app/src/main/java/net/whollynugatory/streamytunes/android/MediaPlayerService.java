@@ -15,6 +15,7 @@
  */
 package net.whollynugatory.streamytunes.android;
 
+import android.app.Activity;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -44,6 +45,7 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.lifecycle.MutableLiveData;
 import androidx.media.AudioFocusRequestCompat;
 import androidx.media.AudioManagerCompat;
 import androidx.media.session.MediaButtonReceiver;
@@ -65,11 +67,14 @@ public class MediaPlayerService extends Service implements
 
   private final static String TAG = BaseActivity.BASE_TAG + MediaPlayerService.class.getSimpleName();
 
+  public MutableLiveData<PlaybackStatus> MusicServiceState = new MutableLiveData<PlaybackStatus>(PlaybackStatus.STOPPED);
+  public MutableLiveData<MediaDetails> CurrentMediaDetails = new MutableLiveData<MediaDetails>();
+
   private final static String AUDIO_PLAYER_TAG = "PlayerService";
   private final static String CHANNEL_ID = "my_channel_01";
   private final static int NOTIFICATION_ID = 1;
 
-  private MediaDetails mActiveMediaDetails;
+  private MediaDetails mActiveMediaDetails = new MediaDetails();
   private int mAudioIndex = -1;
   private ArrayList<MediaDetails> mAudioList;
   private AudioManager mAudioManager;
@@ -81,96 +86,48 @@ public class MediaPlayerService extends Service implements
   private int mResumePosition;
   private TelephonyManager mTelephonyManager;
   private MediaControllerCompat.TransportControls mTransportControls;
+//  private Callbacks mActivity;
 
   private final BroadcastReceiver BecomingNoisyReceiver = new BroadcastReceiver() {
     @Override
     public void onReceive(Context context, Intent intent) {
 
+      Log.d(TAG, "++BecomingNoisyReceiver()");
       pauseMedia();
-      buildNotification(PlaybackStatus.PAUSED);
+//      buildNotification(PlaybackStatus.PAUSED);
     }
   };
 
-  private final BroadcastReceiver PlayNewAudio = new BroadcastReceiver() {
+  private final BroadcastReceiver PauseAudio = new BroadcastReceiver() {
 
     @Override
     public void onReceive(Context context, Intent intent) {
 
-      mAudioIndex = PreferenceUtils.getAudioIndex(getApplicationContext());
-      if (mAudioIndex != -1 && mAudioIndex < mAudioList.size()) {
-        mActiveMediaDetails = mAudioList.get(mAudioIndex);
-      } else {
-        stopSelf();
-      }
+      Log.d(TAG, "++PauseAudio()");
+      pauseMedia();
+//      buildNotification(PlaybackStatus.PAUSED);
+    }
+  };
 
-      stopMedia();
-      mMediaPlayer.reset();
-      initMediaPlayer();
-      updateMetaData();
-      buildNotification(PlaybackStatus.PLAYING);
+  private final BroadcastReceiver PlayAudio = new BroadcastReceiver() {
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+
+      Log.d(TAG, "++PlayAudio()");
+      if (mMediaPlayer.isPlaying()) {
+        stopMedia();
+        stopSelf();
+        initMediaPlayer();
+      } else {
+        updateMetaData();
+        playMedia();
+//        buildNotification(PlaybackStatus.PLAYING);
+      }
     }
   };
 
   private final IBinder iBinder = new LocalBinder();
-
-  @Override
-  public IBinder onBind(Intent intent) {
-
-    Log.d(TAG, "++onBind(Intent)");
-    return iBinder;
-  }
-
-  @Override
-  public void onBufferingUpdate(MediaPlayer mp, int percent) {
-
-    Log.d(TAG, "++onBufferingUpdate(MediaPlayer, int)");
-  }
-
-  @Override
-  public void onCompletion(MediaPlayer mp) {
-
-    Log.d(TAG, "++onCompletion(MediaPlayer)");
-    stopMedia();
-    stopSelf();
-  }
-
-  @Override
-  public void onCreate() {
-    super.onCreate();
-
-    Log.d(TAG, "++onCreate()");
-    callStateListener();
-    registerBecomingNoisyReceiver();
-    registerPlayNewAudio();
-  }
-
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
-
-    Log.d(TAG, "++onDestroy()");
-    if (mMediaPlayer != null) {
-      stopMedia();
-      mMediaPlayer.release();
-    }
-
-    if (mMediaSessionCompat != null) {
-      mMediaSessionCompat.release();
-    }
-
-    if (!removeAudioFocus()) {
-      stopSelf();
-    }
-
-    if (mPhoneStateListener != null) {
-      mTelephonyManager.listen(mPhoneStateListener, PhoneStateListener.LISTEN_NONE);
-    }
-
-    removeNotification();
-    unregisterReceiver(BecomingNoisyReceiver);
-    unregisterReceiver(PlayNewAudio);
-    PreferenceUtils.clearCachedAudioList(getApplicationContext());
-  }
 
   @Override
   public void onAudioFocusChange(int focusState) {
@@ -210,17 +167,95 @@ public class MediaPlayerService extends Service implements
   }
 
   @Override
+  public IBinder onBind(Intent intent) {
+
+    Log.d(TAG, "++onBind(Intent)");
+    return iBinder;
+  }
+
+  @Override
+  public void onBufferingUpdate(MediaPlayer mp, int percent) {
+
+    Log.d(TAG, "++onBufferingUpdate(MediaPlayer, int)");
+  }
+
+  @Override
+  public void onCompletion(MediaPlayer mp) {
+
+    Log.d(TAG, "++onCompletion(MediaPlayer)");
+    if (mAudioList.size() > 1) {
+      if (mAudioIndex == mAudioList.size() - 1) {
+        // TODO: enable repeat
+        stopMedia();
+        stopSelf();
+      } else {
+        mActiveMediaDetails = mAudioList.get(++mAudioIndex);
+      }
+
+      PreferenceUtils.setAudioIndex(getApplicationContext(), mAudioIndex);
+      initMediaPlayer();
+    } else {
+      stopMedia();
+      stopSelf();
+    }
+  }
+
+  @Override
+  public void onCreate() {
+    super.onCreate();
+
+    Log.d(TAG, "++onCreate()");
+    callStateListener();
+    registerBecomingNoisyReceiver();
+    // TODO: registerNextAudio();
+    registerPauseAudio();
+    registerPlayAudio();
+    // TODO: registerPreviousAudio();
+  }
+
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+
+    Log.d(TAG, "++onDestroy()");
+    if (mMediaPlayer != null) {
+      stopMedia();
+      mMediaPlayer.release();
+    }
+
+    if (mMediaSessionCompat != null) {
+      mMediaSessionCompat.release();
+    }
+
+    if (!removeAudioFocus()) {
+      stopSelf();
+    }
+
+    if (mPhoneStateListener != null) {
+      mTelephonyManager.listen(mPhoneStateListener, PhoneStateListener.LISTEN_NONE);
+    }
+
+    removeNotification();
+    unregisterReceiver(BecomingNoisyReceiver);
+    // TODO: unregisterReceiver(NextAudio);
+    unregisterReceiver(PauseAudio);
+    unregisterReceiver(PlayAudio);
+    // TODO: unregisterReceiver(PreviousAudio);
+    PreferenceUtils.clearCachedAudioList(getApplicationContext());
+  }
+
+  @Override
   public boolean onError(MediaPlayer mp, int what, int extra) {
 
     switch (what) {
       case MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:
-        Log.d(TAG, "MEDIA ERROR NOT VALID FOR PROGRESSIVE PLAYBACK " + extra);
+        Log.e(TAG, "MEDIA ERROR NOT VALID FOR PROGRESSIVE PLAYBACK " + extra);
         break;
       case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
-        Log.d(TAG, "MEDIA ERROR SERVER DIED " + extra);
+        Log.e(TAG, "MEDIA ERROR SERVER DIED " + extra);
         break;
       case MediaPlayer.MEDIA_ERROR_UNKNOWN:
-        Log.d(TAG, "MEDIA ERROR UNKNOWN " + extra);
+        Log.e(TAG, "MEDIA ERROR UNKNOWN " + extra);
         break;
     }
 
@@ -253,18 +288,6 @@ public class MediaPlayerService extends Service implements
   public int onStartCommand(Intent intent, int flags, int startId) {
 
     Log.d(TAG, "++onStartCommand(Intent, int, int)");
-    try {
-      mAudioList = PreferenceUtils.getAudioList(getApplicationContext());
-      mAudioIndex = PreferenceUtils.getAudioIndex(getApplicationContext());
-      if (mAudioIndex != -1 && mAudioIndex < mAudioList.size()) {
-        mActiveMediaDetails = mAudioList.get(mAudioIndex);
-      } else {
-        stopSelf();
-      }
-    } catch (NullPointerException e) {
-      stopSelf();
-    }
-
     if (!requestAudioFocus()) {
       stopSelf();
     }
@@ -278,7 +301,7 @@ public class MediaPlayerService extends Service implements
         stopSelf();
       }
 
-      buildNotification(PlaybackStatus.PLAYING);
+//      buildNotification(PlaybackStatus.PLAYING);
     }
 
     if (mMediaSessionCompat != null) {
@@ -291,6 +314,11 @@ public class MediaPlayerService extends Service implements
     return super.onStartCommand(intent, flags, startId);
   }
 
+//  public void registerClient(Activity activity) {
+//
+//    mActivity = (Callbacks)activity;
+//  }
+
   /*
     Private Method(s)
    */
@@ -301,8 +329,10 @@ public class MediaPlayerService extends Service implements
     PendingIntent play_pauseAction = null;
 
     if (playbackStatus == PlaybackStatus.PLAYING) {
+      MusicServiceState.setValue(PlaybackStatus.PLAYING);
       play_pauseAction = playbackAction(1);
     } else if (playbackStatus == PlaybackStatus.PAUSED) {
+      MusicServiceState.setValue(PlaybackStatus.PAUSED);
       notificationAction = android.R.drawable.ic_media_play;
       play_pauseAction = playbackAction(0);
     }
@@ -337,6 +367,7 @@ public class MediaPlayerService extends Service implements
       @Override
       public void onCallStateChanged(int state, String incomingNumber) {
 
+        Log.d(TAG, "++onCallStateChanged(int, String)");
         switch (state) {
           case TelephonyManager.CALL_STATE_OFFHOOK:
           case TelephonyManager.CALL_STATE_RINGING:
@@ -384,6 +415,20 @@ public class MediaPlayerService extends Service implements
   private void initMediaPlayer() {
 
     Log.d(TAG, "++initMediaPlayer()");
+    try {
+      mAudioList = PreferenceUtils.getAudioList(getApplicationContext());
+      mAudioIndex = PreferenceUtils.getAudioIndex(getApplicationContext());
+      if (mAudioIndex != -1 && mAudioIndex < mAudioList.size()) {
+        mActiveMediaDetails = mAudioList.get(mAudioIndex);
+      } else {
+        Log.w(TAG, "Audio index out of range.");
+        stopSelf();
+      }
+    } catch (NullPointerException e) {
+      Log.e(TAG, "Audio list is not ready.", e);
+      stopSelf();
+    }
+
     mMediaPlayer = new MediaPlayer();
     mMediaPlayer.setOnCompletionListener(this);
     mMediaPlayer.setOnErrorListener(this);
@@ -402,13 +447,15 @@ public class MediaPlayerService extends Service implements
       mMediaPlayer.setDataSource(
         getApplicationContext(),
         Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, "" + mActiveMediaDetails.MediaId));
-      Log.d(TAG, "Setting to active source: " + mActiveMediaDetails.toString());
+      Log.d(TAG, "Setting active source: " + mActiveMediaDetails.toString());
+      updateMetaData();
+      CurrentMediaDetails.setValue(mActiveMediaDetails);
+      MusicServiceState.setValue(PlaybackStatus.LOADING);
+      mMediaPlayer.prepareAsync();
     } catch (IOException e) {
       e.printStackTrace();
       stopSelf();
     }
-
-    mMediaPlayer.prepareAsync();
   }
 
   private void initMediaSession() throws RemoteException {
@@ -422,7 +469,6 @@ public class MediaPlayerService extends Service implements
     mMediaSessionCompat = new MediaSessionCompat(getApplicationContext(), AUDIO_PLAYER_TAG);
     mTransportControls = mMediaSessionCompat.getController().getTransportControls();
     mMediaSessionCompat.setActive(true);
-    updateMetaData();
 
     mMediaSessionCompat.setCallback(new MediaSessionCompat.Callback() {
 
@@ -439,7 +485,7 @@ public class MediaPlayerService extends Service implements
 
         Log.d(TAG, "++onPlay()");
         resumeMedia();
-        buildNotification(PlaybackStatus.PLAYING);
+//        buildNotification(PlaybackStatus.PLAYING);
       }
 
       @Override
@@ -448,7 +494,7 @@ public class MediaPlayerService extends Service implements
 
         Log.d(TAG, "++onPause()");
         pauseMedia();
-        buildNotification(PlaybackStatus.PAUSED);
+//        buildNotification(PlaybackStatus.PAUSED);
       }
 
       @Override
@@ -458,7 +504,7 @@ public class MediaPlayerService extends Service implements
         Log.d(TAG, "++onSkipToNext()");
         skipToNext();
         updateMetaData();
-        buildNotification(PlaybackStatus.PLAYING);
+//        buildNotification(PlaybackStatus.PLAYING);
       }
 
       @Override
@@ -468,7 +514,7 @@ public class MediaPlayerService extends Service implements
         Log.d(TAG, "++onSkipToPrevious()");
         skipToPrevious();
         updateMetaData();
-        buildNotification(PlaybackStatus.PLAYING);
+//        buildNotification(PlaybackStatus.PLAYING);
       }
 
       @Override
@@ -517,9 +563,8 @@ public class MediaPlayerService extends Service implements
   private void playMedia() {
 
     Log.d(TAG, "++playMedia()");
-    if (!mMediaPlayer.isPlaying()) {
-      mMediaPlayer.start();
-    }
+    MusicServiceState.setValue(PlaybackStatus.PLAYING);
+    mMediaPlayer.start();
   }
 
   private void pauseMedia() {
@@ -527,7 +572,10 @@ public class MediaPlayerService extends Service implements
     Log.d(TAG, "++pauseMedia()");
     if (mMediaPlayer.isPlaying()) {
       mMediaPlayer.pause();
+      MusicServiceState.setValue(PlaybackStatus.PAUSED);
       mResumePosition = mMediaPlayer.getCurrentPosition();
+    } else {
+      Log.w(TAG, "Media not playing, cannot pause. Bad call?");
     }
   }
 
@@ -538,11 +586,18 @@ public class MediaPlayerService extends Service implements
     registerReceiver(BecomingNoisyReceiver, intentFilter);
   }
 
-  private void registerPlayNewAudio() {
+  private void registerPauseAudio() {
 
-    Log.d(TAG, "++registerPlayNewAudio()");
-    IntentFilter filter = new IntentFilter(BaseActivity.BROADCAST_PLAY_NEW_AUDIO);
-    registerReceiver(PlayNewAudio, filter);
+    Log.d(TAG, "++registerPauseAudio()");
+    IntentFilter filter = new IntentFilter(BaseActivity.BROADCAST_PAUSE_AUDIO);
+    registerReceiver(PauseAudio, filter);
+  }
+
+  private void registerPlayAudio() {
+
+    Log.d(TAG, "++registerPlayAudio()");
+    IntentFilter filter = new IntentFilter(BaseActivity.BROADCAST_PLAY_AUDIO);
+    registerReceiver(PlayAudio, filter);
   }
 
   private boolean removeAudioFocus() {
@@ -596,15 +651,12 @@ public class MediaPlayerService extends Service implements
     Log.d(TAG, "++skipToNext()");
     if (mAudioIndex == mAudioList.size() - 1) {
       mAudioIndex = 0;
-      mActiveMediaDetails = mAudioList.get(mAudioIndex);
     } else {
-      mActiveMediaDetails = mAudioList.get(++mAudioIndex);
+      ++mAudioIndex;
     }
 
     PreferenceUtils.setAudioIndex(getApplicationContext(), mAudioIndex);
-    stopMedia();
-    mMediaPlayer.reset();
-    initMediaPlayer();
+    playMedia();
   }
 
   private void skipToPrevious() {
@@ -612,20 +664,18 @@ public class MediaPlayerService extends Service implements
     Log.d(TAG, "++skipToPrevious()");
     if (mAudioIndex == 0) {
       mAudioIndex = mAudioList.size() - 1;
-      mActiveMediaDetails = mAudioList.get(mAudioIndex);
     } else {
-      mActiveMediaDetails = mAudioList.get(--mAudioIndex);
+      --mAudioIndex;
     }
 
     PreferenceUtils.setAudioIndex(getApplicationContext(), mAudioIndex);
-    stopMedia();
-    mMediaPlayer.reset();
-    initMediaPlayer();
+    playMedia();
   }
 
   private void stopMedia() {
 
     Log.d(TAG, "++stopMedia()");
+    MusicServiceState.setValue(PlaybackStatus.STOPPED);
     if (mMediaPlayer == null) {
       return;
     }
@@ -649,6 +699,11 @@ public class MediaPlayerService extends Service implements
       .putString(MediaMetadataCompat.METADATA_KEY_TITLE, mActiveMediaDetails.Title)
       .build());
   }
+
+//  public interface Callbacks {
+//
+//    void updateClient(PlaybackStatus playbackStatus);
+//  }
 
   public class LocalBinder extends Binder {
 

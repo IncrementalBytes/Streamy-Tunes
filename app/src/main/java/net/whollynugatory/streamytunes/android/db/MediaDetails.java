@@ -15,6 +15,7 @@
  */
 package net.whollynugatory.streamytunes.android.db;
 
+import androidx.annotation.NonNull;
 import androidx.room.DatabaseView;
 
 import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
@@ -87,5 +88,11 @@ public class MediaDetails implements Serializable {
     mediaEntity.TrackNumber = TrackNumber;
     mediaEntity.Year = Year;
     return mediaEntity;
+  }
+
+  @NonNull
+  @Override
+  public String toString() {
+    return String.format("%s - %s - %s", ArtistName, AlbumName, Title);
   }
 }
