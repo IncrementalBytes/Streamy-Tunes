@@ -122,30 +122,19 @@ public class MainActivity extends BaseActivity implements
     mPlayerNextImage = findViewById(R.id.player_image_next);
     mPlayerNextImage.setOnClickListener(v -> {
 
-      List<MediaDetails> mediaDetailsList = PreferenceUtils.getAudioList(this);
-      if (mediaDetailsList.size() > 1) {
-        checkForPermission(BaseActivity.ACTION_NEXT);
-      } else {
-        Toast.makeText(this, "No Op", Toast.LENGTH_SHORT).show();
-      }
-    });
+        List<MediaDetails> mediaDetailsList = PreferenceUtils.getAudioList(this);
+        if (mediaDetailsList.size() > 1) {
+          checkForPermission(BaseActivity.ACTION_NEXT);
+        }
+      });
 
     mPlayerPlayPauseImage = findViewById(R.id.player_image_play_pause);
     mPlayerPlayPauseImage.setOnClickListener(v -> {
 
-//        if (mCurrentState.equals(ServiceState.Paused)) {
-//          checkForPermission(BaseActivity.ACTION_PLAY);
-//        } else if (mCurrentState.equals(ServiceState.Playing)) {
-//          checkForPermission(BaseActivity.ACTION_PAUSE);
-//        }
-
-        if (mServiceBound) {
-          Intent broadcastIntent = new Intent(BaseActivity.BROADCAST_PLAY_AUDIO);
-          if (mCurrentPlaybackStatus.equals(PlaybackStatus.PLAYING)) {
-            broadcastIntent = new Intent(BaseActivity.BROADCAST_PAUSE_AUDIO);
-          }
-
-          sendBroadcast(broadcastIntent);
+        if (mCurrentPlaybackStatus.equals(PlaybackStatus.PLAYING)) {
+          checkForPermission(ACTION_PAUSE);
+        } else {
+          checkForPermission(ACTION_PLAY);
         }
       });
 
@@ -155,8 +144,6 @@ public class MainActivity extends BaseActivity implements
       List<MediaDetails> mediaDetailsList = PreferenceUtils.getAudioList(this);
       if (mediaDetailsList.size() > 1) {
         checkForPermission(BaseActivity.ACTION_PREVIOUS);
-      } else {
-        Toast.makeText(this, "No Op", Toast.LENGTH_SHORT).show();
       }
     });
 
@@ -488,12 +475,47 @@ public class MainActivity extends BaseActivity implements
         MediaPlayerService implementation
        */
       if (!mServiceBound) {
+        Log.w(TAG, "Service was not bound before calling permission check.");
         Intent playerIntent = new Intent(this, MediaPlayerService.class);
         startService(playerIntent);
         bindService(playerIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
       } else {
-        Intent broadcastIntent = new Intent(BaseActivity.BROADCAST_PLAY_AUDIO);
+        Intent broadcastIntent = new Intent(BaseActivity.ACTION_PLAY);
+        switch (action) {
+          case ACTION_NEXT:
+            if (currentAudioIndex == audioList.size() - 1) {
+              currentAudioIndex = 0; // TODO: add repeat functionality, for now just loop to beginning of audio list
+            } else {
+              ++currentAudioIndex;
+            }
+
+            PreferenceUtils.setAudioIndex(getApplicationContext(), currentAudioIndex);
+            broadcastIntent = new Intent(BaseActivity.ACTION_PLAY);
+            break;
+          case ACTION_PAUSE:
+            broadcastIntent = new Intent(BaseActivity.ACTION_PAUSE);
+            break;
+          case ACTION_PREVIOUS:
+            if (currentAudioIndex == 0) {
+              currentAudioIndex = audioList.size() - 1; // TODO: add repeat functionality, for now just loop to end of audio list
+            } else {
+              --currentAudioIndex;
+            }
+
+            PreferenceUtils.setAudioIndex(getApplicationContext(), currentAudioIndex);
+            broadcastIntent = new Intent(BaseActivity.ACTION_PLAY);
+            break;
+        }
+
         sendBroadcast(broadcastIntent);
+//      if (!mServiceBound) {
+//        Intent playerIntent = new Intent(this, MediaPlayerService.class);
+//        startService(playerIntent);
+//        bindService(playerIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+//      } else {
+//        Intent broadcastIntent = new Intent(BaseActivity.BROADCAST_PLAY_AUDIO);
+//        sendBroadcast(broadcastIntent);
+//      }
       }
 
       mPlayerIncludeView.setVisibility(View.VISIBLE);

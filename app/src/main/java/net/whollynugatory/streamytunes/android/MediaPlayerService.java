@@ -98,6 +98,18 @@ public class MediaPlayerService extends Service implements
     }
   };
 
+//  private final BroadcastReceiver NextAudio = new BroadcastReceiver() {
+//
+//    @Override
+//    public void onReceive(Context context, Intent intent) {
+//
+//      Log.d(TAG, "++NextAudio()");
+//      // TODO: handle skipping to next when paused
+//      skipToNext();
+////      buildNotification(PlaybackStatus.PLAYING);
+//    }
+//  };
+
   private final BroadcastReceiver PauseAudio = new BroadcastReceiver() {
 
     @Override
@@ -126,6 +138,18 @@ public class MediaPlayerService extends Service implements
       }
     }
   };
+
+//  private final BroadcastReceiver PreviousAudio = new BroadcastReceiver() {
+//
+//    @Override
+//    public void onReceive(Context context, Intent intent) {
+//
+//      Log.d(TAG, "++PreviousAudio()");
+//      // TODO: handle skipping to previous when paused
+//      skipToPrevious();
+////      buildNotification(PlaybackStatus.PLAYING);
+//    }
+//  };
 
   private final IBinder iBinder = new LocalBinder();
 
@@ -207,10 +231,10 @@ public class MediaPlayerService extends Service implements
     Log.d(TAG, "++onCreate()");
     callStateListener();
     registerBecomingNoisyReceiver();
-    // TODO: registerNextAudio();
+//    registerNextAudio();
     registerPauseAudio();
     registerPlayAudio();
-    // TODO: registerPreviousAudio();
+//    registerPreviousAudio();
   }
 
   @Override
@@ -502,8 +526,8 @@ public class MediaPlayerService extends Service implements
         super.onSkipToNext();
 
         Log.d(TAG, "++onSkipToNext()");
-        skipToNext();
-        updateMetaData();
+//        skipToNext();
+//        updateMetaData();
 //        buildNotification(PlaybackStatus.PLAYING);
       }
 
@@ -512,8 +536,8 @@ public class MediaPlayerService extends Service implements
         super.onSkipToPrevious();
 
         Log.d(TAG, "++onSkipToPrevious()");
-        skipToPrevious();
-        updateMetaData();
+//        skipToPrevious();
+//        updateMetaData();
 //        buildNotification(PlaybackStatus.PLAYING);
       }
 
@@ -586,19 +610,33 @@ public class MediaPlayerService extends Service implements
     registerReceiver(BecomingNoisyReceiver, intentFilter);
   }
 
+//  private void registerNextAudio() {
+//
+//    Log.d(TAG, "++registerNextAudio()");
+//    IntentFilter filter = new IntentFilter(BaseActivity.ACTION_NEXT);
+//    registerReceiver(NextAudio, filter);
+//  }
+
   private void registerPauseAudio() {
 
     Log.d(TAG, "++registerPauseAudio()");
-    IntentFilter filter = new IntentFilter(BaseActivity.BROADCAST_PAUSE_AUDIO);
+    IntentFilter filter = new IntentFilter(BaseActivity.ACTION_PAUSE);
     registerReceiver(PauseAudio, filter);
   }
 
   private void registerPlayAudio() {
 
     Log.d(TAG, "++registerPlayAudio()");
-    IntentFilter filter = new IntentFilter(BaseActivity.BROADCAST_PLAY_AUDIO);
+    IntentFilter filter = new IntentFilter(BaseActivity.ACTION_PLAY);
     registerReceiver(PlayAudio, filter);
   }
+
+//  private void registerPreviousAudio() {
+//
+//    Log.d(TAG, "++registerPreviousAudio()");
+//    IntentFilter filter = new IntentFilter(BaseActivity.ACTION_PREVIOUS);
+//    registerReceiver(PreviousAudio, filter);
+//  }
 
   private boolean removeAudioFocus() {
 
@@ -646,31 +684,17 @@ public class MediaPlayerService extends Service implements
     }
   }
 
-  private void skipToNext() {
-
-    Log.d(TAG, "++skipToNext()");
-    if (mAudioIndex == mAudioList.size() - 1) {
-      mAudioIndex = 0;
-    } else {
-      ++mAudioIndex;
-    }
-
-    PreferenceUtils.setAudioIndex(getApplicationContext(), mAudioIndex);
-    playMedia();
-  }
-
-  private void skipToPrevious() {
-
-    Log.d(TAG, "++skipToPrevious()");
-    if (mAudioIndex == 0) {
-      mAudioIndex = mAudioList.size() - 1;
-    } else {
-      --mAudioIndex;
-    }
-
-    PreferenceUtils.setAudioIndex(getApplicationContext(), mAudioIndex);
-    playMedia();
-  }
+//  private void skipToNext() {
+//
+//    Log.d(TAG, "++skipToNext()");
+//    playMedia();
+//  }
+//
+//  private void skipToPrevious() {
+//
+//    Log.d(TAG, "++skipToPrevious()");
+//    playMedia();
+//  }
 
   private void stopMedia() {
 

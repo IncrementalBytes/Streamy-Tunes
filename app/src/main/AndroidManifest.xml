@@ -40,8 +40,8 @@
         <action android:name="net.whollynugatory.streamytunes.android.PLAY"/>
         <action android:name="net.whollynugatory.streamytunes.android.PAUSE"/>
         <action android:name="net.whollynugatory.streamytunes.android.STOP"/>
-        <action android:name="net.whollynugatory.streamytunes.android.SKIP"/>
-        <action android:name="net.whollynugatory.streamytunes.android.REWIND"/>
+        <action android:name="net.whollynugatory.streamytunes.android.NEXT"/>
+        <action android:name="net.whollynugatory.streamytunes.android.PREVIOUS"/>
       </intent-filter>
     </service>
     <receiver android:name=".MusicIntentReceiver">

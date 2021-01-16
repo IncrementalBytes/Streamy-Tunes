@@ -38,15 +38,12 @@ public class BaseActivity extends AppCompatActivity {
   public static final int REQUEST_STORAGE_PERMISSIONS = 2001;
   public static final int REQUEST_PHONE_PERMISSIONS = 2002;
 
-  public static final String ACTION_PLAY = "net.whollynugatory.streamytunes.android.PLAY";
-  public static final String ACTION_PAUSE = "net.whollynugatory.streamytunes.android.PAUSE";
-  public static final String ACTION_PREVIOUS = "net.whollynugatory.streamytunes.android.PREVIOUS";
   public static final String ACTION_NEXT = "net.whollynugatory.streamytunes.android.NEXT";
-
-  public static final String BROADCAST_NEXT_AUDIO = "net.whollynugatory.streamytunes.android.NextAudio";
-  public static final String BROADCAST_PAUSE_AUDIO = "net.whollynugatory.streamytunes.android.PauseAudio";
-  public static final String BROADCAST_PLAY_AUDIO = "net.whollynugatory.streamytunes.android.PlayAudio";
-  public static final String BROADCAST_PREV_AUDIO = "net.whollynugatory.streamytunes.android.PrevAudio";
+  public static final String ACTION_PAUSE = "net.whollynugatory.streamytunes.android.PAUSE";
+  public static final String ACTION_PLAY = "net.whollynugatory.streamytunes.android.PLAY";
+  public static final String ACTION_PREVIOUS = "net.whollynugatory.streamytunes.android.PREVIOUS";
+  public static final String ACTION_STOP = "net.whollynugatory.streamytunes.android.STOP";
+  public static final String ACTION_TOGGLE_PLAYBACK = "net.whollynugatory.streamytunes.android.TOGGLE_PLAYBACK";
 
   public enum ServiceState {
 
