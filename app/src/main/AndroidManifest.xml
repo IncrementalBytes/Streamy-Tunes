@@ -33,7 +33,6 @@
           <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
     </activity>
-<!--    <service android:name="net.whollynugatory.streamytunes.android.MusicService" android:enabled="true" android:exported="false">-->
     <service android:name="net.whollynugatory.streamytunes.android.MediaPlayerService" android:enabled="true" android:exported="false">
       <intent-filter>
         <action android:name="net.whollynugatory.streamytunes.android.TOGGLE_PLAYBACK"/>
@@ -44,11 +43,6 @@
         <action android:name="net.whollynugatory.streamytunes.android.PREVIOUS"/>
       </intent-filter>
     </service>
-    <receiver android:name=".MusicIntentReceiver">
-      <intent-filter>
-        <action android:name="android.intent.action.MEDIA_BUTTON"/>
-      </intent-filter>
-    </receiver>
   </application>
 
 </manifest>

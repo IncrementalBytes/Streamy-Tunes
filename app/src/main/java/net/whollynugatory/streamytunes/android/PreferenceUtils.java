@@ -25,7 +25,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import net.whollynugatory.streamytunes.android.db.MediaDetails;
-import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;

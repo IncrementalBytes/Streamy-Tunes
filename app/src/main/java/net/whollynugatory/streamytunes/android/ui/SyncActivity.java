@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Ryan Ward
+ * Copyright 2021 Ryan Ward
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ public class SyncActivity extends BaseActivity {
   /*
     Private Method(s)
    */
-  private boolean checkForPermission() {
+  private void checkForPermission() {
 
     Log.d(TAG, "++checkForPermission(String, int)");
     if ((ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) ||
@@ -101,9 +101,7 @@ public class SyncActivity extends BaseActivity {
     } else {
       Log.d(TAG, "Permissions granted: " + Manifest.permission.READ_EXTERNAL_STORAGE + ", " + Manifest.permission.ACCESS_MEDIA_LOCATION);
       new MediaSearchAsync(this, MediaRepository.getInstance(StreamyTunesDatabase.getInstance(this).mediaDao())).execute();
-      return true;
     }
 
-    return false;
   }
 }

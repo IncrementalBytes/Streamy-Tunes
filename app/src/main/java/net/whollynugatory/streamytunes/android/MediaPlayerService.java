@@ -15,7 +15,6 @@
  */
 package net.whollynugatory.streamytunes.android;
 
-import android.app.Activity;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -34,7 +33,6 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
@@ -55,6 +53,7 @@ import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MediaPlayerService extends Service implements
   MediaPlayer.OnCompletionListener,
@@ -67,26 +66,27 @@ public class MediaPlayerService extends Service implements
 
   private final static String TAG = BaseActivity.BASE_TAG + MediaPlayerService.class.getSimpleName();
 
-  public MutableLiveData<PlaybackStatus> MusicServiceState = new MutableLiveData<PlaybackStatus>(PlaybackStatus.STOPPED);
-  public MutableLiveData<MediaDetails> CurrentMediaDetails = new MutableLiveData<MediaDetails>();
+  public MutableLiveData<PlaybackStatus> MusicServiceState = new MutableLiveData<>(PlaybackStatus.STOPPED);
+  public MutableLiveData<MediaDetails> CurrentMediaDetails = new MutableLiveData<>();
 
   private final static String AUDIO_PLAYER_TAG = "PlayerService";
   private final static String CHANNEL_ID = "my_channel_01";
   private final static int NOTIFICATION_ID = 1;
+
+  private final IBinder iBinder = new LocalBinder();
 
   private MediaDetails mActiveMediaDetails = new MediaDetails();
   private int mAudioIndex = -1;
   private ArrayList<MediaDetails> mAudioList;
   private AudioManager mAudioManager;
   private MediaPlayer mMediaPlayer;
-  private MediaSessionManager mMediaSessionManager;
   private MediaSessionCompat mMediaSessionCompat;
+  private MediaSessionManager mMediaSessionManager;
   private boolean mOngoingCall = false;
   private PhoneStateListener mPhoneStateListener;
   private int mResumePosition;
   private TelephonyManager mTelephonyManager;
   private MediaControllerCompat.TransportControls mTransportControls;
-//  private Callbacks mActivity;
 
   private final BroadcastReceiver BecomingNoisyReceiver = new BroadcastReceiver() {
     @Override
@@ -97,18 +97,6 @@ public class MediaPlayerService extends Service implements
 //      buildNotification(PlaybackStatus.PAUSED);
     }
   };
-
-//  private final BroadcastReceiver NextAudio = new BroadcastReceiver() {
-//
-//    @Override
-//    public void onReceive(Context context, Intent intent) {
-//
-//      Log.d(TAG, "++NextAudio()");
-//      // TODO: handle skipping to next when paused
-//      skipToNext();
-////      buildNotification(PlaybackStatus.PLAYING);
-//    }
-//  };
 
   private final BroadcastReceiver PauseAudio = new BroadcastReceiver() {
 
@@ -127,6 +115,7 @@ public class MediaPlayerService extends Service implements
     public void onReceive(Context context, Intent intent) {
 
       Log.d(TAG, "++PlayAudio()");
+      // TODO: if player is paused we want to execute isPlaying branch
       if (mMediaPlayer.isPlaying()) {
         stopMedia();
         stopSelf();
@@ -138,20 +127,6 @@ public class MediaPlayerService extends Service implements
       }
     }
   };
-
-//  private final BroadcastReceiver PreviousAudio = new BroadcastReceiver() {
-//
-//    @Override
-//    public void onReceive(Context context, Intent intent) {
-//
-//      Log.d(TAG, "++PreviousAudio()");
-//      // TODO: handle skipping to previous when paused
-//      skipToPrevious();
-////      buildNotification(PlaybackStatus.PLAYING);
-//    }
-//  };
-
-  private final IBinder iBinder = new LocalBinder();
 
   @Override
   public void onAudioFocusChange(int focusState) {
@@ -231,10 +206,8 @@ public class MediaPlayerService extends Service implements
     Log.d(TAG, "++onCreate()");
     callStateListener();
     registerBecomingNoisyReceiver();
-//    registerNextAudio();
     registerPauseAudio();
     registerPlayAudio();
-//    registerPreviousAudio();
   }
 
   @Override
@@ -261,16 +234,15 @@ public class MediaPlayerService extends Service implements
 
     removeNotification();
     unregisterReceiver(BecomingNoisyReceiver);
-    // TODO: unregisterReceiver(NextAudio);
     unregisterReceiver(PauseAudio);
     unregisterReceiver(PlayAudio);
-    // TODO: unregisterReceiver(PreviousAudio);
     PreferenceUtils.clearCachedAudioList(getApplicationContext());
   }
 
   @Override
   public boolean onError(MediaPlayer mp, int what, int extra) {
 
+    Log.d(TAG, "++onError(MediaPlayer, int, int)");
     switch (what) {
       case MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:
         Log.e(TAG, "MEDIA ERROR NOT VALID FOR PROGRESSIVE PLAYBACK " + extra);
@@ -320,8 +292,8 @@ public class MediaPlayerService extends Service implements
       try {
         initMediaSession();
         initMediaPlayer();
-      } catch (RemoteException e) {
-        e.printStackTrace();
+      } catch (Exception e) {
+        Log.e(TAG, "Failed to initialize media player.", e);
         stopSelf();
       }
 
@@ -332,16 +304,20 @@ public class MediaPlayerService extends Service implements
       MediaButtonReceiver.handleIntent(mMediaSessionCompat, intent);
     } else {
       Log.w(TAG, "MediaSession was null, defaulting to handleIncomingActions");
-      handleIncomingActions(intent);
+      String actionString = intent.getAction();
+      if (actionString.equalsIgnoreCase(BaseActivity.ACTION_PLAY)) {
+        mTransportControls.play();
+      } else if (actionString.equalsIgnoreCase(BaseActivity.ACTION_PAUSE)) {
+        mTransportControls.pause();
+      } else if (actionString.equalsIgnoreCase(BaseActivity.ACTION_NEXT)) {
+        mTransportControls.skipToNext();
+      } else if (actionString.equalsIgnoreCase(BaseActivity.ACTION_PREVIOUS)) {
+        mTransportControls.skipToPrevious();
+      }
     }
 
     return super.onStartCommand(intent, flags, startId);
   }
-
-//  public void registerClient(Activity activity) {
-//
-//    mActivity = (Callbacks)activity;
-//  }
 
   /*
     Private Method(s)
@@ -417,25 +393,6 @@ public class MediaPlayerService extends Service implements
     mTelephonyManager.listen(mPhoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
   }
 
-  private void handleIncomingActions(Intent playbackAction) {
-
-    Log.d(TAG, "++handleIncomingActions(Intent)");
-    if (playbackAction == null || playbackAction.getAction() == null) {
-      return;
-    }
-
-    String actionString = playbackAction.getAction();
-    if (actionString.equalsIgnoreCase(BaseActivity.ACTION_PLAY)) {
-      mTransportControls.play();
-    } else if (actionString.equalsIgnoreCase(BaseActivity.ACTION_PAUSE)) {
-      mTransportControls.pause();
-    } else if (actionString.equalsIgnoreCase(BaseActivity.ACTION_NEXT)) {
-      mTransportControls.skipToNext();
-    } else if (actionString.equalsIgnoreCase(BaseActivity.ACTION_PREVIOUS)) {
-      mTransportControls.skipToPrevious();
-    }
-  }
-
   private void initMediaPlayer() {
 
     Log.d(TAG, "++initMediaPlayer()");
@@ -482,7 +439,7 @@ public class MediaPlayerService extends Service implements
     }
   }
 
-  private void initMediaSession() throws RemoteException {
+  private void initMediaSession() {
 
     Log.d(TAG, "++initMediaSession()");
     if (mMediaSessionManager != null) {
@@ -526,8 +483,16 @@ public class MediaPlayerService extends Service implements
         super.onSkipToNext();
 
         Log.d(TAG, "++onSkipToNext()");
-//        skipToNext();
-//        updateMetaData();
+        int currentAudioIndex = PreferenceUtils.getAudioIndex(getApplicationContext());
+        List<MediaDetails> audioList = PreferenceUtils.getAudioList(getApplicationContext());
+        if (currentAudioIndex == audioList.size() - 1) {
+          currentAudioIndex = 0; // TODO: add repeat functionality, for now just loop to beginning of audio list
+        } else {
+          ++currentAudioIndex;
+        }
+
+        PreferenceUtils.setAudioIndex(getApplicationContext(), currentAudioIndex);
+        playMedia();
 //        buildNotification(PlaybackStatus.PLAYING);
       }
 
@@ -536,8 +501,16 @@ public class MediaPlayerService extends Service implements
         super.onSkipToPrevious();
 
         Log.d(TAG, "++onSkipToPrevious()");
-//        skipToPrevious();
-//        updateMetaData();
+        int currentAudioIndex = PreferenceUtils.getAudioIndex(getApplicationContext());
+        List<MediaDetails> audioList = PreferenceUtils.getAudioList(getApplicationContext());
+        if (currentAudioIndex == 0) {
+          currentAudioIndex = audioList.size() - 1; // TODO: add repeat functionality, for now just loop to end of audio list
+        } else {
+          --currentAudioIndex;
+        }
+
+        PreferenceUtils.setAudioIndex(getApplicationContext(), currentAudioIndex);
+        playMedia();
 //        buildNotification(PlaybackStatus.PLAYING);
       }
 
@@ -555,6 +528,7 @@ public class MediaPlayerService extends Service implements
         super.onSeekTo(position);
 
         Log.d(TAG, "++onSeekTo()");
+        // TODO: enable seek functionality
       }
     });
   }
@@ -610,13 +584,6 @@ public class MediaPlayerService extends Service implements
     registerReceiver(BecomingNoisyReceiver, intentFilter);
   }
 
-//  private void registerNextAudio() {
-//
-//    Log.d(TAG, "++registerNextAudio()");
-//    IntentFilter filter = new IntentFilter(BaseActivity.ACTION_NEXT);
-//    registerReceiver(NextAudio, filter);
-//  }
-
   private void registerPauseAudio() {
 
     Log.d(TAG, "++registerPauseAudio()");
@@ -630,13 +597,6 @@ public class MediaPlayerService extends Service implements
     IntentFilter filter = new IntentFilter(BaseActivity.ACTION_PLAY);
     registerReceiver(PlayAudio, filter);
   }
-
-//  private void registerPreviousAudio() {
-//
-//    Log.d(TAG, "++registerPreviousAudio()");
-//    IntentFilter filter = new IntentFilter(BaseActivity.ACTION_PREVIOUS);
-//    registerReceiver(PreviousAudio, filter);
-//  }
 
   private boolean removeAudioFocus() {
 
@@ -684,18 +644,6 @@ public class MediaPlayerService extends Service implements
     }
   }
 
-//  private void skipToNext() {
-//
-//    Log.d(TAG, "++skipToNext()");
-//    playMedia();
-//  }
-//
-//  private void skipToPrevious() {
-//
-//    Log.d(TAG, "++skipToPrevious()");
-//    playMedia();
-//  }
-
   private void stopMedia() {
 
     Log.d(TAG, "++stopMedia()");
@@ -723,11 +671,6 @@ public class MediaPlayerService extends Service implements
       .putString(MediaMetadataCompat.METADATA_KEY_TITLE, mActiveMediaDetails.Title)
       .build());
   }
-
-//  public interface Callbacks {
-//
-//    void updateClient(PlaybackStatus playbackStatus);
-//  }
 
   public class LocalBinder extends Binder {
 
