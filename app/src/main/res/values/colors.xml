@@ -15,4 +15,5 @@
   <color name="icons">#ffffff</color>
   <color name="background">#A8464646</color>
   <color name="transparent">#00000000</color>
+  <color name="notification_bg">#e91e63</color>
 </resources>

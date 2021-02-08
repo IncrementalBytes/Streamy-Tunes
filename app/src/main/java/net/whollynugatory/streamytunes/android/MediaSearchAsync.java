@@ -80,6 +80,7 @@ public class MediaSearchAsync extends AsyncTask<Void, Void, Void> {
       MediaStore.Audio.Media.ARTIST_ID,
       MediaStore.Audio.Media.TITLE,
       MediaStore.Audio.Media.TRACK,
+      MediaStore.Audio.Media.DURATION,
       MediaStore.Audio.Media.YEAR,
       MediaStore.Audio.Media.IS_AUDIOBOOK,
       MediaStore.Audio.Media.IS_MUSIC,
@@ -119,6 +120,7 @@ public class MediaSearchAsync extends AsyncTask<Void, Void, Void> {
           mediaEntity.MediaId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
           mediaEntity.AlbumId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
           mediaEntity.ArtistId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID));
+          mediaEntity.Duration = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION));
           mediaEntity.IsAudiobook = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_AUDIOBOOK)) != 0;
           mediaEntity.IsExternal = true; // TODO: update if support for internal is implemented
           mediaEntity.IsMusic = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_MUSIC)) != 0;

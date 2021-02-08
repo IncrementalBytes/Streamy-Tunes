@@ -77,6 +77,9 @@ public interface MediaDao {
   @Insert
   void insertMedia(MediaEntity mediaEntity);
 
+//  @Insert
+//  void insertMediaMetadata(MediaMetadataCompat mediaMetadataCompat);
+
   @Insert
   void insertPlaylist(PlaylistEntity playlistEntity);
 

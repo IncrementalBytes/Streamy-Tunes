@@ -26,11 +26,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 
 import net.whollynugatory.streamytunes.android.PreferenceUtils;
 import net.whollynugatory.streamytunes.android.R;
-import net.whollynugatory.streamytunes.android.db.viewmodel.MediaViewModel;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.Locale;
@@ -63,7 +61,7 @@ public class SummaryFragment extends Fragment {
 
   private OnSummaryListener mCallback;
 
-  private MediaViewModel mMediaViewModel;
+//  private MediaViewModel mMediaViewModel;
 
   public static SummaryFragment newInstance() {
 
@@ -99,7 +97,7 @@ public class SummaryFragment extends Fragment {
     super.onCreate(savedInstanceState);
 
     Log.d(TAG, "++onCreate(Bundle)");
-    mMediaViewModel = new ViewModelProvider(this).get(MediaViewModel.class);
+//    mMediaViewModel = new ViewModelProvider(this).get(MediaViewModel.class);
   }
 
   @Override
@@ -178,40 +176,41 @@ public class SummaryFragment extends Fragment {
   private void updateUI() {
 
     if (mIsAudiobook) {
-      mMediaViewModel.getAudiobooks().observe(getViewLifecycleOwner(), audiobookEntities -> {
-
-        if (audiobookEntities != null) {
-          mFirstValueTextView.setText(getResources().getQuantityString(R.plurals.format_authors, audiobookEntities.size(), audiobookEntities.size()));
-          mSecondValueTextView.setText(
-            getResources().getQuantityString(
-              R.plurals.format_audiobooks,
-              audiobookEntities.size(),
-              audiobookEntities.size()));
-          mCallback.onQueryComplete(audiobookEntities.size());
-        }
-      });
+//      mMediaViewModel.getAudiobooks().observe(getViewLifecycleOwner(), audiobookEntities -> {
+//
+//        if (audiobookEntities != null) {
+//          mFirstValueTextView.setText(getResources().getQuantityString(R.plurals.format_authors, audiobookEntities.size(), audiobookEntities.size()));
+//          mSecondValueTextView.setText(
+//            getResources().getQuantityString(
+//              R.plurals.format_audiobooks,
+//              audiobookEntities.size(),
+//              audiobookEntities.size()));
+//          mCallback.onQueryComplete(audiobookEntities.size());
+//        }
+//      });
     } else if (mIsPodcast) {
-      mMediaViewModel.getPodcasts().observe(getViewLifecycleOwner(), podcastEntities -> {
-
-        if (podcastEntities != null) {
-          mFirstValueTextView.setText(getResources().getQuantityString(R.plurals.format_podcasts, podcastEntities.size(), podcastEntities.size()));
-          mCallback.onQueryComplete(podcastEntities.size());
-        }
-      });
+//      mMediaViewModel.getPodcasts().observe(getViewLifecycleOwner(), podcastEntities -> {
+//
+//        if (podcastEntities != null) {
+//          mFirstValueTextView.setText(getResources().getQuantityString(R.plurals.format_podcasts, podcastEntities.size(), podcastEntities.size()));
+//          mCallback.onQueryComplete(podcastEntities.size());
+//        }
+//      });
     } else {
-      mMediaViewModel.getAlbums().observe(getViewLifecycleOwner(), albumViews -> {
 
-        mFirstValueTextView.setText(getResources().getQuantityString(R.plurals.format_albums, albumViews.size(), albumViews.size()));
-        mMediaViewModel.getArtists().observe(getViewLifecycleOwner(), artistViews -> {
-
-          mSecondValueTextView.setText(getResources().getQuantityString(R.plurals.format_artists, artistViews.size(), artistViews.size()));
-          mMediaViewModel.getPlaylists().observe(getViewLifecycleOwner(), playlistViews -> {
-
-            mThirdValueTextView.setText(getResources().getQuantityString(R.plurals.format_playlists, playlistViews.size(), playlistViews.size()));
-            mCallback.onQueryComplete(albumViews.size() + artistViews.size() + playlistViews.size());
-          });
-        });
-      });
+//      mMediaViewModel.getAlbums().observe(getViewLifecycleOwner(), albumViews -> {
+//
+//        mFirstValueTextView.setText(getResources().getQuantityString(R.plurals.format_albums, albumViews.size(), albumViews.size()));
+//        mMediaViewModel.getArtists().observe(getViewLifecycleOwner(), artistViews -> {
+//
+//          mSecondValueTextView.setText(getResources().getQuantityString(R.plurals.format_artists, artistViews.size(), artistViews.size()));
+//          mMediaViewModel.getPlaylists().observe(getViewLifecycleOwner(), playlistViews -> {
+//
+//            mThirdValueTextView.setText(getResources().getQuantityString(R.plurals.format_playlists, playlistViews.size(), playlistViews.size()));
+//            mCallback.onQueryComplete(albumViews.size() + artistViews.size() + playlistViews.size());
+//          });
+//        });
+//      });
     }
   }
 }

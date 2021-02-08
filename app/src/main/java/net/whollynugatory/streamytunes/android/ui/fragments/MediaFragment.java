@@ -18,6 +18,9 @@ package net.whollynugatory.streamytunes.android.ui.fragments;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaMetadataCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,7 +31,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -38,7 +40,7 @@ import net.whollynugatory.streamytunes.android.Utils;
 import net.whollynugatory.streamytunes.android.db.MediaDetails;
 import net.whollynugatory.streamytunes.android.db.PlaylistDetails;
 import net.whollynugatory.streamytunes.android.db.entity.MediaEntity;
-import net.whollynugatory.streamytunes.android.db.viewmodel.MediaViewModel;
+import net.whollynugatory.streamytunes.android.service.contentcatalogs.MusicLibrary;
 import net.whollynugatory.streamytunes.android.ui.BaseActivity;
 
 import java.util.ArrayList;
@@ -52,7 +54,7 @@ public class MediaFragment extends Fragment {
   public interface OnMediaListener {
 
     void onMediaAddToPlaylist(MediaEntity mediaEntity);
-    void onMediaClicked();
+    void onMediaClicked(MediaDetails mediaDetails);
     void onMediaUpdateFavorites(MediaEntity mediaEntity);
   }
 
@@ -61,9 +63,15 @@ public class MediaFragment extends Fragment {
   private long mAlbumId;
   private long mArtistId;
   private String mPlaylistId;
-  private MediaViewModel mMediaViewModel;
+//  private MediaViewModel mMediaViewModel;
 
   private RecyclerView mRecyclerView;
+
+  public static MediaFragment newInstance() {
+
+    Log.d(TAG, "++newInstanceByAlbum()");
+    return new MediaFragment();
+  }
 
   public static MediaFragment newInstanceByAlbum(long albumId) {
 
@@ -138,8 +146,6 @@ public class MediaFragment extends Fragment {
       } else {
         mPlaylistId = BaseActivity.UNKNOWN_GUID;
       }
-    } else {
-      Log.e(TAG, "Arguments were null.");
     }
   }
 
@@ -148,7 +154,7 @@ public class MediaFragment extends Fragment {
     super.onCreate(savedInstanceState);
 
     Log.d(TAG, "++onCreate(Bundle)");
-    mMediaViewModel = new ViewModelProvider(this).get(MediaViewModel.class);
+//    mMediaViewModel = new ViewModelProvider(this).get(MediaViewModel.class);
   }
 
   @Override
@@ -186,34 +192,51 @@ public class MediaFragment extends Fragment {
 
     MediaAdapter mediaAdapter = new MediaAdapter(getContext());
     mRecyclerView.setAdapter(mediaAdapter);
-    if (mAlbumId > BaseActivity.UNKNOWN_ID) {
-      mMediaViewModel.getMusicByAlbumId(mAlbumId).observe(getViewLifecycleOwner(), albumWithSongs -> {
+    List<MediaDetails> mediaDetailsList = new ArrayList<>();
+    List<MediaBrowserCompat.MediaItem> mediaItemList = MusicLibrary.getMediaItems();
+    for (MediaBrowserCompat.MediaItem mediaItem : mediaItemList) {
+      MediaMetadataCompat mediaMetadataCompat = MusicLibrary.getMetadata(mediaItem.getMediaId());
+      MediaDetails mediaDetails = new MediaDetails();
+      mediaDetails.AlbumId = mediaMetadataCompat.getLong(MediaStore.Audio.Media.ALBUM_ID);
+      mediaDetails.AlbumName = mediaMetadataCompat.getString(MediaMetadataCompat.METADATA_KEY_ALBUM);
+      mediaDetails.ArtistId = mediaMetadataCompat.getLong(MediaStore.Audio.Media.ARTIST_ID);
+      mediaDetails.ArtistName = mediaMetadataCompat.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
+      mediaDetails.MediaId = Long.parseLong(mediaMetadataCompat.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID));
+      mediaDetails.Title = mediaMetadataCompat.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
 
-        if (albumWithSongs != null && albumWithSongs.size() > 0) {
-          mediaAdapter.setMediaDetailsList(albumWithSongs);
-        } else {
-          // TODO: callback with no media
-        }
-      });
-    } else if (mArtistId > BaseActivity.UNKNOWN_ID) {
-      mMediaViewModel.getMusicByArtistId(mArtistId).observe(getViewLifecycleOwner(), artistWithSongs -> {
-
-        if (artistWithSongs != null && artistWithSongs.size() > 0) {
-          mediaAdapter.setMediaDetailsList(artistWithSongs);
-        } else {
-          // TODO: callback with no media
-        }
-      });
-    } else if (!mPlaylistId.isEmpty() && !mPlaylistId.equals(BaseActivity.UNKNOWN_GUID)) {
-      mMediaViewModel.getMusicByPlaylistId(mPlaylistId).observe(getViewLifecycleOwner(), playlistSongs -> {
-
-        if (playlistSongs != null && playlistSongs.size() > 0) {
-          mediaAdapter.setPlaylistDetailsList(playlistSongs);
-        } else {
-          // TODO: callback with no media
-        }
-      });
+      mediaDetailsList.add(mediaDetails);
     }
+
+    mediaAdapter.setMediaDetailsList(mediaDetailsList);
+
+//    if (mAlbumId > BaseActivity.UNKNOWN_ID) {
+//      mMediaViewModel.getMusicByAlbumId(mAlbumId).observe(getViewLifecycleOwner(), albumWithSongs -> {
+//
+//        if (albumWithSongs != null && albumWithSongs.size() > 0) {
+//          mediaAdapter.setMediaDetailsList(albumWithSongs);
+//        } else {
+//          // TODO: callback with no media
+//        }
+//      });
+//    } else if (mArtistId > BaseActivity.UNKNOWN_ID) {
+//      mMediaViewModel.getMusicByArtistId(mArtistId).observe(getViewLifecycleOwner(), artistWithSongs -> {
+//
+//        if (artistWithSongs != null && artistWithSongs.size() > 0) {
+//          mediaAdapter.setMediaDetailsList(artistWithSongs);
+//        } else {
+//          // TODO: callback with no media
+//        }
+//      });
+//    } else if (!mPlaylistId.isEmpty() && !mPlaylistId.equals(BaseActivity.UNKNOWN_GUID)) {
+//      mMediaViewModel.getMusicByPlaylistId(mPlaylistId).observe(getViewLifecycleOwner(), playlistSongs -> {
+//
+//        if (playlistSongs != null && playlistSongs.size() > 0) {
+//          mediaAdapter.setPlaylistDetailsList(playlistSongs);
+//        } else {
+//          // TODO: callback with no media
+//        }
+//      });
+//    }
   }
 
   /*
@@ -308,7 +331,7 @@ public class MediaFragment extends Fragment {
 
         PreferenceUtils.setAudioList(getContext(), mMediaList);
         PreferenceUtils.setAudioIndex(getContext(), mediaIndex);
-        mCallback.onMediaClicked();
+        mCallback.onMediaClicked(mMedia);
       }
     }
 

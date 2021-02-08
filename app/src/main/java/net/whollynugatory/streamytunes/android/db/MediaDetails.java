@@ -15,6 +15,9 @@
  */
 package net.whollynugatory.streamytunes.android.db;
 
+import android.provider.MediaStore;
+import android.support.v4.media.MediaMetadataCompat;
+
 import androidx.annotation.NonNull;
 import androidx.room.DatabaseView;
 
@@ -94,5 +97,17 @@ public class MediaDetails implements Serializable {
   @Override
   public String toString() {
     return String.format("%s - %s - %s", ArtistName, AlbumName, Title);
+  }
+
+  public MediaMetadataCompat toMediaMetadataCompat() {
+    return  new MediaMetadataCompat.Builder()
+            .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, String.valueOf(MediaId))
+            .putLong(MediaStore.Audio.Media.ALBUM_ID, AlbumId)
+            .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, AlbumName)
+            .putLong(MediaStore.Audio.Media.ARTIST_ID, ArtistId)
+            .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, ArtistName)
+            .putString(MediaMetadataCompat.METADATA_KEY_TITLE, Title)
+            .putLong(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER, TrackNumber)
+            .build();
   }
 }

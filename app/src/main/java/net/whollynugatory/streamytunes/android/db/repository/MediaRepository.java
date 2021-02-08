@@ -125,6 +125,11 @@ public class MediaRepository {
     mMediaDao.insertMedia(mediaEntity);
   }
 
+//  public void insertMediaMetadata(MediaMetadataCompat mediaMetadataCompat) {
+//
+//    mMediaDao.insertMediaMetadata(mediaMetadataCompat);
+//  }
+
   public void insertPlaylist(PlaylistEntity playlistEntity) {
 
     mMediaDao.insertPlaylist(playlistEntity);

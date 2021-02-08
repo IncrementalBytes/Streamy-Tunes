@@ -40,6 +40,8 @@ public class MediaEntity {
   public long ArtistId;
   public String ArtistName;
 
+  public long Duration;
+
   public boolean IsAudiobook;
 
   public boolean IsExternal;
@@ -59,6 +61,7 @@ public class MediaEntity {
     MediaId = BaseActivity.UNKNOWN_ID;
     Title = BaseActivity.UNKNOWN_STRING;
     AlbumId = BaseActivity.UNKNOWN_ID;
+    Duration = BaseActivity.UNKNOWN_DURATION;
     IsAudiobook = false;
     IsExternal = false;
     IsFavorite = false;

@@ -102,6 +102,5 @@ public class SyncActivity extends BaseActivity {
       Log.d(TAG, "Permissions granted: " + Manifest.permission.READ_EXTERNAL_STORAGE + ", " + Manifest.permission.ACCESS_MEDIA_LOCATION);
       new MediaSearchAsync(this, MediaRepository.getInstance(StreamyTunesDatabase.getInstance(this).mediaDao())).execute();
     }
-
   }
 }

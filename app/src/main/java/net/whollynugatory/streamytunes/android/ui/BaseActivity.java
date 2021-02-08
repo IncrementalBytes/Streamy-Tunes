@@ -21,11 +21,13 @@ public class BaseActivity extends AppCompatActivity {
 
   public static final String BASE_TAG = "StreamyTunes::";
 
+  public static final int UNKNOWN_DURATION = 0;
+  public static final String UNKNOWN_GUID = "00000000-0000-0000-0000-0000000000000";
   public static final int UNKNOWN_ID = -1;
   public static final String UNKNOWN_STRING = "UNKNOWN";
-  public static final String UNKNOWN_GUID = "00000000-0000-0000-0000-0000000000000";
+  public static final int UNKNOWN_TRACK = -1;
 
-  public static final int REQUEST_SYNC = 1001;
+  public static final int NOTIFICATION_ID = 412;
 
   public static final String ARG_ALBUM_ID = "album_id";
   public static final String ARG_ARTIST_ID = "artist_id";
@@ -35,8 +37,16 @@ public class BaseActivity extends AppCompatActivity {
   public static final String DEFAULT_PLAYLIST_FAVORITES_ID = "5BD0B3B2-8362-4D3F-8EC4-BA4921ABF578";
   public static final String DEFAULT_PLAYLIST_FAVORITES = "Favorites";
 
-  public static final int REQUEST_STORAGE_PERMISSIONS = 2001;
-  public static final int REQUEST_PHONE_PERMISSIONS = 2002;
+  public static final int REQUEST_PERMISSIONS = 2000;
+  public static final int REQUEST_ACCESS_MEDIA_LOCATION = 2001;
+  public static final int REQUEST_FOREGROUND_SERVICE = 2002;
+  public static final int REQUEST_NOTIFICATION = 2003;
+  public static final int REQUEST_PHONE_PERMISSIONS = 2004;
+  public static final int REQUEST_READ_EXTERNAL_STORAGE = 2005;
+  public static final int REQUEST_READ_PHONE_STATE = 2006;
+  public static final int REQUEST_STORAGE_PERMISSIONS = 2007;
+  public static final int REQUEST_SYNC = 2008;
+  public static final int REQUEST_WAKE_LOCK = 2009;
 
   public static final String ACTION_NEXT = "net.whollynugatory.streamytunes.android.NEXT";
   public static final String ACTION_PAUSE = "net.whollynugatory.streamytunes.android.PAUSE";
@@ -45,11 +55,11 @@ public class BaseActivity extends AppCompatActivity {
   public static final String ACTION_STOP = "net.whollynugatory.streamytunes.android.STOP";
   public static final String ACTION_TOGGLE_PLAYBACK = "net.whollynugatory.streamytunes.android.TOGGLE_PLAYBACK";
 
-  public enum ServiceState {
-
-    Stopped,
-    Preparing,
-    Playing,
-    Paused
-  }
+//  public enum ServiceState {
+//
+//    Stopped,
+//    Preparing,
+//    Playing,
+//    Paused
+//  }
 }

@@ -77,6 +77,12 @@
   <string name="desc_previous_media">Previous media</string>
   <string name="desc_next_media">Next media</string>
   <string name="desc_album_image">Album image</string>
+  <string name="label_play">Play</string>
+  <string name="label_pause">Pause</string>
+  <string name="label_next">Next Track</string>
+  <string name="label_previous">Previous Track</string>
+  <string name="permission_request">App cannot function without required permissions.</string>
+  <string name="permissions">Access to storage and phone needed to function properly.</string>
 
   <plurals name="format_songs">
     <item quantity="one">1 song</item>
